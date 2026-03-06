@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getMatches } from "@/server/actions/matches";
 import { PageHeader } from "@/components/ui/page-header";

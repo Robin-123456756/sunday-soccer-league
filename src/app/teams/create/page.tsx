@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createTeam } from "@/server/actions/teams";
 import { getVenues } from "@/server/actions/venues";

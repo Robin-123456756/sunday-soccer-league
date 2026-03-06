@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getTeams } from "@/server/actions/teams";
 import { PageHeader } from "@/components/ui/page-header";
@@ -63,7 +64,7 @@ export default async function TeamsPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-                <span>{team.players?.length ?? 0} players</span>
+                <span>{team._count?.players ?? 0} players</span>
                 {team.homeVenue && <span>{team.homeVenue.name}</span>}
               </div>
             </Link>

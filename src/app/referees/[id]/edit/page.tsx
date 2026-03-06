@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { notFound, redirect } from "next/navigation";
 import { getRefereeById, updateReferee } from "@/server/actions/referees";
 import { PageHeader } from "@/components/ui/page-header";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getPlayers } from "@/server/actions/players";
 import { getTeams } from "@/server/actions/teams";
