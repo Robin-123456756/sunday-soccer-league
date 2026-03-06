@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sunday Soccer League Matchday System
+
+A digital system for recording Sunday soccer league matchday information, including lineups, substitutions, cards, referee reports, jersey colors, home/away designation, and uploaded team sheets.
+
+## Features
+- Match creation and scheduling
+- Home and away team tracking with jersey colors
+- Referee assignment and reporting
+- Starting XI and bench recording
+- Substitution tracking
+- Card and caution reason tracking
+- Referee observations and match comments
+- Team sheet image upload and storage
+- Historical access to match records
+- CSV and Excel export of player data
+
+## Main Users
+- **League Admin** - Full system management
+- **Referee** - Match reports, cards, observations
+- **Team Manager** - Lineups, team sheet uploads
+
+## Tech Stack
+- [Next.js](https://nextjs.org/) (App Router)
+- TypeScript
+- [Tailwind CSS](https://tailwindcss.com/)
+- [PostgreSQL](https://www.postgresql.org/) via [Supabase](https://supabase.com/)
+- [Prisma](https://www.prisma.io/) ORM
+- Supabase Auth & Storage
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- npm
+- A Supabase project (or local PostgreSQL)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Setup
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Copy environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+4. Update `.env` with your Supabase/database credentials
+5. Generate Prisma client and run migrations:
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev --name init
+   ```
+6. Seed the database (optional):
+   ```bash
+   npx prisma db seed
+   ```
+7. Start the development server:
+   ```bash
+   npm run dev
+   ```
+8. Open [http://localhost:3000](http://localhost:3000)
+
+## Project Structure
+```
+sunday-soccer-league/
+├── docs/                    # System documentation
+│   ├── system-overview.md
+│   ├── requirements.md
+│   ├── user-flows.md
+│   ├── database-schema.md
+│   ├── api-spec.md
+│   └── referee-report-format.md
+├── prisma/
+│   └── schema.prisma        # Database schema
+├── src/
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # React components
+│   ├── lib/                 # Utilities (db, auth, storage, validation)
+│   └── types/               # TypeScript type definitions
+└── public/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Core Modules
+- Authentication & Role-based Access
+- League Management (Teams, Players, Referees, Seasons, Venues)
+- Match Management (Fixtures, Lineups, Results)
+- Discipline Tracking (Cards, Caution Reasons)
+- Referee Reporting
+- Media Uploads (Team Sheet Images)
+- Data Export (CSV, Excel)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Build Phases
+1. Teams, Players, Referees, Fixtures
+2. Lineups, Bench, Home/Away, Jersey Colors
+3. Cards, Caution Reasons, Referee Reports
+4. Team Sheet Image Upload, Historical Search
+5. Reports, Exports, Discipline Automation

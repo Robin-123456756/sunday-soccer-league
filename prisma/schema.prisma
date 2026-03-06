@@ -1,0 +1,336 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth & Access Control ───────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // admin, referee, team_manager
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+
+  @@map("roles")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  roleId       String
+  role         Role     @relation(fields: [roleId], references: [id])
+  teamId       String?
+  team         Team?    @relation(fields: [teamId], references: [id])
+  refereeId    String?
+  referee      Referee? @relation(fields: [refereeId], references: [id])
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teamSheetUploads TeamSheetUpload[]
+  exportJobs       ExportJob[]
+
+  @@map("users")
+}
+
+// ─── League Structure ────────────────────────────────────────────────
+
+model Season {
+  id        String     @id @default(uuid())
+  name      String // e.g., "2026 Spring Season"
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean    @default(true)
+  matchdays Matchday[]
+  matches   Match[]
+  createdAt DateTime   @default(now())
+
+  @@map("seasons")
+}
+
+model Matchday {
+  id        String   @id @default(uuid())
+  seasonId  String
+  season    Season   @relation(fields: [seasonId], references: [id])
+  name      String // e.g., "Matchday 1", "Round 5"
+  date      DateTime?
+  matches   Match[]
+  createdAt DateTime @default(now())
+
+  @@map("matchdays")
+}
+
+model Venue {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  city      String?
+  teams     Team[]   @relation("HomeVenue")
+  matches   Match[]
+  createdAt DateTime @default(now())
+
+  @@map("venues")
+}
+
+// ─── Teams & Players ─────────────────────────────────────────────────
+
+model Team {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  shortName      String?
+  primaryColor   String?
+  secondaryColor String?
+  homeVenueId    String?
+  homeVenue      Venue?   @relation("HomeVenue", fields: [homeVenueId], references: [id])
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  players          Player[]
+  users            User[]
+  homeMatches      Match[]           @relation("HomeTeam")
+  awayMatches      Match[]           @relation("AwayTeam")
+  matchLineups     MatchLineup[]
+  substitutions    Substitution[]
+  cardEvents       CardEvent[]
+  teamSheetUploads TeamSheetUpload[]
+
+  @@map("teams")
+}
+
+model Player {
+  id                 String   @id @default(uuid())
+  teamId             String
+  team               Team     @relation(fields: [teamId], references: [id])
+  fullName           String
+  jerseyNumber       Int?
+  position           String? // GK, DEF, MID, FWD
+  dateOfBirth        DateTime?
+  registrationNumber String?  @unique
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+
+  matchLineups  MatchLineup[]
+  substitutedOff Substitution[] @relation("PlayerOff")
+  substitutedOn  Substitution[] @relation("PlayerOn")
+  cardEvents    CardEvent[]
+
+  @@map("players")
+}
+
+// ─── Referees ────────────────────────────────────────────────────────
+
+model Referee {
+  id        String   @id @default(uuid())
+  fullName  String
+  phone     String?
+  email     String?
+  level     String? // e.g., "Level 1", "Senior"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users              User[]
+  matchesAsMain      Match[]         @relation("MainReferee")
+  matchesAsAssistant1 Match[]        @relation("AssistantRef1")
+  matchesAsAssistant2 Match[]        @relation("AssistantRef2")
+  refereeReports     RefereeReport[]
+
+  @@map("referees")
+}
+
+// ─── Matches ─────────────────────────────────────────────────────────
+
+enum MatchStatus {
+  scheduled
+  in_progress
+  completed
+  postponed
+}
+
+model Match {
+  id                   String      @id @default(uuid())
+  seasonId             String?
+  season               Season?     @relation(fields: [seasonId], references: [id])
+  matchdayId           String?
+  matchday             Matchday?   @relation(fields: [matchdayId], references: [id])
+  matchDate            DateTime
+  kickoffTime          String? // e.g., "10:00"
+  venueId              String?
+  venue                Venue?      @relation(fields: [venueId], references: [id])
+  homeTeamId           String
+  homeTeam             Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId           String
+  awayTeam             Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeJerseyColor      String?
+  awayJerseyColor      String?
+  refereeId            String?
+  referee              Referee?    @relation("MainReferee", fields: [refereeId], references: [id])
+  assistantReferee1Id  String?
+  assistantReferee1    Referee?    @relation("AssistantRef1", fields: [assistantReferee1Id], references: [id])
+  assistantReferee2Id  String?
+  assistantReferee2    Referee?    @relation("AssistantRef2", fields: [assistantReferee2Id], references: [id])
+  status               MatchStatus @default(scheduled)
+  homeScore            Int?
+  awayScore            Int?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  lineups          MatchLineup[]
+  substitutions    Substitution[]
+  cardEvents       CardEvent[]
+  refereeReport    RefereeReport?
+  teamSheetUploads TeamSheetUpload[]
+
+  @@map("matches")
+}
+
+// ─── Match Events ────────────────────────────────────────────────────
+
+enum LineupType {
+  starter
+  bench
+}
+
+model MatchLineup {
+  id         String     @id @default(uuid())
+  matchId    String
+  match      Match      @relation(fields: [matchId], references: [id])
+  teamId     String
+  team       Team       @relation(fields: [teamId], references: [id])
+  playerId   String
+  player     Player     @relation(fields: [playerId], references: [id])
+  lineupType LineupType
+  isCaptain  Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  @@unique([matchId, teamId, playerId])
+  @@map("match_lineups")
+}
+
+model Substitution {
+  id          String   @id @default(uuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id])
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id])
+  playerOffId String
+  playerOff   Player   @relation("PlayerOff", fields: [playerOffId], references: [id])
+  playerOnId  String
+  playerOn    Player   @relation("PlayerOn", fields: [playerOnId], references: [id])
+  minute      Int
+  reason      String? // injury, tactical, fatigue
+  createdAt   DateTime @default(now())
+
+  @@map("substitutions")
+}
+
+enum CardType {
+  yellow
+  red
+  second_yellow_red
+}
+
+model CardEvent {
+  id          String   @id @default(uuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id])
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id])
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id])
+  cardType    CardType
+  minute      Int
+  reason      String
+  refereeNote String?
+  createdAt   DateTime @default(now())
+
+  @@map("card_events")
+}
+
+// ─── Referee Reports ─────────────────────────────────────────────────
+
+model RefereeReport {
+  id                        String   @id @default(uuid())
+  matchId                   String   @unique
+  match                     Match    @relation(fields: [matchId], references: [id])
+  refereeId                 String
+  referee                   Referee  @relation(fields: [refereeId], references: [id])
+  generalComment            String?
+  timeManagementObservation String?
+  dressCodeObservation      String?
+  organizationObservation   String?
+  conductObservation        String?
+  incidents                 String?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("referee_reports")
+}
+
+// ─── Uploads & Media ─────────────────────────────────────────────────
+
+model TeamSheetUpload {
+  id               String   @id @default(uuid())
+  matchId          String
+  match            Match    @relation(fields: [matchId], references: [id])
+  teamId           String
+  team             Team     @relation(fields: [teamId], references: [id])
+  uploadedByUserId String?
+  uploadedBy       User?    @relation(fields: [uploadedByUserId], references: [id])
+  fileName         String
+  fileUrl          String
+  fileType         String // MIME type
+  uploadedAt       DateTime @default(now())
+
+  @@map("team_sheet_uploads")
+}
+
+// ─── Reference Data ──────────────────────────────────────────────────
+
+model CautionReason {
+  id       String  @id @default(uuid())
+  name     String
+  category String? // e.g., "caution", "sending_off"
+
+  @@map("caution_reasons")
+}
+
+// ─── Export Tracking ─────────────────────────────────────────────────
+
+enum ExportType {
+  player_details
+  team_players
+  discipline_report
+  appearance_report
+}
+
+enum ExportFormat {
+  csv
+  xlsx
+}
+
+enum ExportStatus {
+  pending
+  completed
+  failed
+}
+
+model ExportJob {
+  id              String       @id @default(uuid())
+  requestedByUserId String
+  requestedBy     User         @relation(fields: [requestedByUserId], references: [id])
+  exportType      ExportType
+  fileFormat      ExportFormat
+  filtersJson     String? // JSON string of applied filters
+  fileUrl         String?
+  status          ExportStatus @default(pending)
+  createdAt       DateTime     @default(now())
+
+  @@map("export_jobs")
+}
