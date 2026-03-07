@@ -19,6 +19,11 @@
 - `src/app/players/_components/player-form.tsx`
 - `src/app/referees/_components/referee-form.tsx`
 - `src/app/matches/_components/match-form.tsx`
+- `src/components/forms/CreateMatchForm.tsx`
+- `src/components/forms/SaveLineupForm.tsx`
+- `src/components/forms/RecordCardForm.tsx`
+- `src/components/forms/RefereeReportForm.tsx`
+- `src/components/forms/TeamSheetUploadForm.tsx`
 
 ## Data Display Components
 - `src/components/ui/status-badge.tsx`: match status pill styles

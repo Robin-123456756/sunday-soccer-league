@@ -31,8 +31,13 @@
 ### Matches
 - `/matches` list
 - `/matches/create` create form
+- `/matches/new` alternate create flow (starter forms)
 - `/matches/:id` detail
 - `/matches/:id/edit` edit form
+- `/matches/:matchId/lineups`
+- `/matches/:matchId/cards`
+- `/matches/:matchId/referee-report`
+- `/matches/:matchId/uploads`
 
 ## Navigation Model
 - Persistent left sidebar for top-level sections

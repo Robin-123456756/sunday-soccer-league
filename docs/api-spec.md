@@ -10,7 +10,13 @@ This project currently exposes application behavior through Next.js pages and se
 - `GET /teams`, `GET /teams/create`, `GET /teams/:id`, `GET /teams/:id/edit`
 - `GET /players`, `GET /players/create`, `GET /players/:id`, `GET /players/:id/edit`
 - `GET /referees`, `GET /referees/create`, `GET /referees/:id`, `GET /referees/:id/edit`
-- `GET /matches`, `GET /matches/create`, `GET /matches/:id`, `GET /matches/:id/edit`
+- `GET /matches`, `GET /matches/create`, `GET /matches/new`, `GET /matches/:id`, `GET /matches/:id/edit`
+- `GET /matches/:matchId/lineups`
+- `GET /matches/:matchId/cards`
+- `GET /matches/:matchId/referee-report`
+- `GET /matches/:matchId/uploads`
+- `GET /reports/exports`
+- `POST /api/exports`
 
 ## 2. Implemented Server Action Surface
 
@@ -41,6 +47,13 @@ This project currently exposes application behavior through Next.js pages and se
 - `createMatch(formData)`
 - `updateMatch(id, formData)`
 - `deleteMatch(id)` (hard delete)
+
+### Match Operations (Starter Forms Integration)
+- `recordCardEvent(input)` in `src/server/actions/cards.ts`
+- `saveLineup(input)` in `src/server/actions/lineups.ts`
+- `submitRefereeReport(input)` in `src/server/actions/referee-reports.ts`
+- `saveTeamSheetUpload(input)` in `src/server/actions/uploads.ts`
+- `createExportJob(input)` in `src/server/actions/exports.ts`
 
 ### Supporting Data (`src/server/actions/seasons.ts`, `venues.ts`)
 - `getSeasons()`, `getSeasonWithMatchdays(seasonId)`, `getMatchdays(seasonId)`
