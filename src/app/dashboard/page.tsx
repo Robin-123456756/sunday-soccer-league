@@ -3,22 +3,19 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 
 export default async function DashboardPage() {
-  const [teamCount, playerCount, refereeCount, matchCount, recentMatches] =
-    await Promise.all([
-      prisma.team.count({ where: { isActive: true } }),
-      prisma.player.count({ where: { isActive: true } }),
-      prisma.referee.count({ where: { isActive: true } }),
-      prisma.match.count(),
-      prisma.match.findMany({
-        take: 5,
-        orderBy: { matchDate: "desc" },
-        include: {
-          homeTeam: { select: { name: true, shortName: true } },
-          awayTeam: { select: { name: true, shortName: true } },
-          venue: { select: { name: true } },
-        },
-      }),
-    ]);
+  const teamCount = await prisma.team.count({ where: { isActive: true } });
+  const playerCount = await prisma.player.count({ where: { isActive: true } });
+  const refereeCount = await prisma.referee.count({ where: { isActive: true } });
+  const matchCount = await prisma.match.count();
+  const recentMatches = await prisma.match.findMany({
+    take: 5,
+    orderBy: { matchDate: "desc" },
+    include: {
+      homeTeam: { select: { name: true, shortName: true } },
+      awayTeam: { select: { name: true, shortName: true } },
+      venue: { select: { name: true } },
+    },
+  });
 
   const stats = [
     { label: "Teams", value: teamCount, href: "/teams", color: "bg-blue-500" },
