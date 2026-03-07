@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getRefereeById, deleteReferee } from "@/server/actions/referees";
+import { getRefereeById } from "@/server/actions/referees";
+import { archiveReferee as deleteReferee } from "@/server/actions/archive";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 

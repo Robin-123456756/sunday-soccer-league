@@ -1,31 +1,26 @@
 import { NextResponse } from "next/server";
 import { toCsv, toExcelBuffer } from "@/lib/export";
-import type { PlayerExportRow } from "@/types/player";
-
-function sampleRows(): PlayerExportRow[] {
-  return [
-    {
-      fullName: "Sample Player",
-      teamName: "Sample FC",
-      jerseyNumber: 10,
-      position: "Midfielder",
-      registrationNumber: "REG-001",
-      isActive: true,
-      yellowCards: 1,
-      redCards: 0,
-      appearances: 3,
-    },
-  ];
-}
+import { getExportablePlayerRows } from "@/server/queries/players";
+import { requireRole } from "@/server/queries/auth";
 
 export async function GET(request: Request) {
+  await requireRole(["admin"]);
+
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "csv";
-  const rows = sampleRows();
+  const teamId = searchParams.get("teamId") ?? undefined;
+  const playerId = searchParams.get("playerId") ?? undefined;
+
+  const rows = await getExportablePlayerRows({ teamId, playerId });
 
   if (format === "xlsx") {
     const buffer = toExcelBuffer(rows);
-    return new NextResponse(new Uint8Array(buffer), {
+    const arrayBuffer = buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    ) as ArrayBuffer;
+
+    return new NextResponse(arrayBuffer, {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": 'attachment; filename="players.xlsx"',

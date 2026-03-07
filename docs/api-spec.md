@@ -1,83 +1,32 @@
-# Interface Specification
+# API Specification
 
-This project currently exposes application behavior through Next.js pages and server actions (not public REST API routes yet).
+## Matches
+- `POST /api/matches` create match
+- `GET /api/matches` list matches
+- `GET /api/matches/:id` get match details
+- `PATCH /api/matches/:id` update match
 
-## 1. Implemented Route Surface
+## Lineups
+- `POST /api/matches/:id/lineups` save lineup
+- `GET /api/matches/:id/lineups` get lineups
 
-### Core Pages
-- `GET /` -> redirects to `/dashboard`
-- `GET /dashboard`
-- `GET /teams`, `GET /teams/create`, `GET /teams/:id`, `GET /teams/:id/edit`
-- `GET /players`, `GET /players/create`, `GET /players/:id`, `GET /players/:id/edit`
-- `GET /referees`, `GET /referees/create`, `GET /referees/:id`, `GET /referees/:id/edit`
-- `GET /matches`, `GET /matches/create`, `GET /matches/new`, `GET /matches/:id`, `GET /matches/:id/edit`
-- `GET /matches/:matchId/lineups`
-- `GET /matches/:matchId/cards`
-- `GET /matches/:matchId/referee-report`
-- `GET /matches/:matchId/uploads`
-- `GET /reports/exports`
-- `POST /api/exports`
+## Substitutions
+- `POST /api/matches/:id/substitutions` record substitution
+- `GET /api/matches/:id/substitutions` list substitutions
 
-## 2. Implemented Server Action Surface
+## Cards
+- `POST /api/matches/:id/cards` record card event
+- `GET /api/matches/:id/cards` list card events
 
-### Teams (`src/server/actions/teams.ts`)
-- `getTeams()`
-- `getTeamById(id)`
-- `createTeam(formData)`
-- `updateTeam(id, formData)`
-- `deleteTeam(id)` (soft deactivate)
+## Referee Reports
+- `POST /api/matches/:id/referee-report` submit report
+- `GET /api/matches/:id/referee-report` get report
 
-### Players (`src/server/actions/players.ts`)
-- `getPlayers(teamId?)`
-- `getPlayerById(id)`
-- `createPlayer(formData)`
-- `updatePlayer(id, formData)`
-- `deletePlayer(id)` (soft deactivate)
+## Uploads
+- `POST /api/matches/:id/uploads/team-sheet` upload file
+- `GET /api/matches/:id/uploads` list files
 
-### Referees (`src/server/actions/referees.ts`)
-- `getReferees()`
-- `getRefereeById(id)`
-- `createReferee(formData)`
-- `updateReferee(id, formData)`
-- `deleteReferee(id)` (soft deactivate)
-
-### Matches (`src/server/actions/matches.ts`)
-- `getMatches(filters?)`
-- `getMatchById(id)`
-- `createMatch(formData)`
-- `updateMatch(id, formData)`
-- `deleteMatch(id)` (hard delete)
-
-### Match Operations (Starter Forms Integration)
-- `recordCardEvent(input)` in `src/server/actions/cards.ts`
-- `saveLineup(input)` in `src/server/actions/lineups.ts`
-- `submitRefereeReport(input)` in `src/server/actions/referee-reports.ts`
-- `saveTeamSheetUpload(input)` in `src/server/actions/uploads.ts`
-- `createExportJob(input)` in `src/server/actions/exports.ts`
-
-### Supporting Data (`src/server/actions/seasons.ts`, `venues.ts`)
-- `getSeasons()`, `getSeasonWithMatchdays(seasonId)`, `getMatchdays(seasonId)`
-- `createSeason(formData)`, `createMatchday(formData)`
-- `getVenues()`, `createVenue(formData)`
-
-## 3. Current Input/Output Contract Pattern
-
-### Create/Update Actions
-- Input: `FormData`
-- Validation: done in action
-- Success result: `{ success: true }`
-- Validation failure: `{ error: string }`
-- UI behavior: calling page redirects back with `?error=...` and shows `FormErrorAlert`
-
-### Query/List Actions
-- Input: optional primitive filters
-- Output: Prisma result objects with selected relations
-
-## 4. Planned Public REST API (Backlog)
-
-The following endpoint groups remain planned, based on the product documentation:
-- `/api/auth/*`
-- `/api/seasons/*`, `/api/matchdays/*`, `/api/venues/*`
-- `/api/teams/*`, `/api/players/*`, `/api/referees/*`, `/api/matches/*`
-- `/api/matches/:id/lineups`, `/substitutions`, `/cards`, `/referee-report`, `/uploads`
-- `/api/exports/*`, `/api/search/*`
+## Exports
+- `GET /api/exports/players.csv` export player data as CSV
+- `GET /api/exports/players.xlsx` export player data as Excel
+- `POST /api/exports/generate` create export job

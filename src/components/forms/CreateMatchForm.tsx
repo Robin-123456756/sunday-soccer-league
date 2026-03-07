@@ -30,12 +30,18 @@ export function CreateMatchForm({ teams, referees }: { teams: Option[]; referees
         const formData = new FormData(event.currentTarget);
         startTransition(async () => {
           try {
-            const result = await createMatch(formData);
-            if (result.error) {
-              setError(result.error);
-              return;
-            }
-            setMessage('Match created successfully.');
+            const result = await createMatch({
+              matchDate: String(formData.get('matchDate') ?? ''),
+              kickoffTime: String(formData.get('kickoffTime') ?? '') || null,
+              venue: String(formData.get('venue') ?? '') || null,
+              homeTeamId: String(formData.get('homeTeamId') ?? ''),
+              awayTeamId: String(formData.get('awayTeamId') ?? ''),
+              homeJerseyColor: String(formData.get('homeJerseyColor') ?? '') || null,
+              awayJerseyColor: String(formData.get('awayJerseyColor') ?? '') || null,
+              refereeId: String(formData.get('refereeId') ?? '') || null,
+              status: String(formData.get('status') ?? 'scheduled') as any,
+            });
+            setMessage(`Match created successfully. Match ID: ${result.id}`);
             (event.target as HTMLFormElement).reset();
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Could not create match.');
@@ -51,7 +57,7 @@ export function CreateMatchForm({ teams, referees }: { teams: Option[]; referees
       <div style={gridStyle}>
         <Field label="Match date"><input name="matchDate" type="date" required style={inputStyle} /></Field>
         <Field label="Kickoff time"><input name="kickoffTime" type="time" style={inputStyle} /></Field>
-        <Field label="Venue"><input name="venueId" placeholder="Venue ID (optional)" style={inputStyle} /></Field>
+        <Field label="Venue"><input name="venue" placeholder="Main pitch" style={inputStyle} /></Field>
         <Field label="Status">
           <select name="status" defaultValue="scheduled" style={inputStyle}>
             <option value="scheduled">Scheduled</option>

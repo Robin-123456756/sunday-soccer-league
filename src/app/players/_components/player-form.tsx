@@ -14,7 +14,6 @@ interface PlayerDefaultValues {
   teamId?: string | null;
   jerseyNumber?: number | null;
   position?: string | null;
-  dateOfBirth?: Date | string | null;
   registrationNumber?: string | null;
 }
 
@@ -25,10 +24,6 @@ interface PlayerFormProps {
 }
 
 export function PlayerForm({ action, teams, defaultValues }: PlayerFormProps) {
-  const dateOfBirth = defaultValues?.dateOfBirth
-    ? new Date(defaultValues.dateOfBirth).toISOString().split("T")[0]
-    : "";
-
   return (
     <form
       action={action}
@@ -91,15 +86,6 @@ export function PlayerForm({ action, teams, defaultValues }: PlayerFormProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <FormField label="Date of Birth" name="dateOfBirth">
-            <input
-              type="date"
-              name="dateOfBirth"
-              defaultValue={dateOfBirth}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </FormField>
-
           <FormField label="Registration Number" name="registrationNumber">
             <input
               type="text"

@@ -10,6 +10,7 @@ export interface MatchListItem {
   home_team: { id: string; name: string } | null;
   away_team: { id: string; name: string } | null;
   referee: { id: string; full_name: string } | null;
+  is_archived?: boolean;
 }
 
 export interface MatchLineupRow {
@@ -18,41 +19,23 @@ export interface MatchLineupRow {
   is_captain: boolean;
 }
 
-export interface MatchDetails {
+export interface MatchCardEventRow {
   id: string;
-  match_date: string;
-  kickoff_time: string | null;
-  venue: string | null;
-  status: string;
-  home_jersey_color: string | null;
-  away_jersey_color: string | null;
-  home_team: { id: string; name: string } | null;
-  away_team: { id: string; name: string } | null;
-  referee: { id: string; full_name: string; email: string | null } | null;
+  minute: number;
+  card_type: string;
+  reason: string;
+  referee_note: string | null;
+  player: { id: string; full_name: string | null } | null;
+  team: { id: string; name: string | null } | null;
 }
 
-interface RawMatchListItem {
+export interface MatchUploadRow {
   id: string;
-  match_date: string;
-  kickoff_time: string | null;
-  venue: string | null;
-  status: string;
-  home_team: { id: string; name: string }[] | null;
-  away_team: { id: string; name: string }[] | null;
-  referee: { id: string; full_name: string }[] | null;
-}
-
-interface RawMatchDetails {
-  id: string;
-  match_date: string;
-  kickoff_time: string | null;
-  venue: string | null;
-  status: string;
-  home_jersey_color: string | null;
-  away_jersey_color: string | null;
-  home_team: { id: string; name: string }[] | null;
-  away_team: { id: string; name: string }[] | null;
-  referee: { id: string; full_name: string; email: string | null }[] | null;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  uploaded_at: string;
+  team: { id: string; name: string | null } | null;
 }
 
 export async function getMatchById(matchId: string): Promise<MatchRecord> {
@@ -83,16 +66,7 @@ export async function getMatches(): Promise<MatchListItem[]> {
     .order('match_date', { ascending: false });
 
   if (error) throw new Error('Could not load matches.');
-  return ((data ?? []) as RawMatchListItem[]).map((row) => ({
-    id: row.id,
-    match_date: row.match_date,
-    kickoff_time: row.kickoff_time,
-    venue: row.venue,
-    status: row.status,
-    home_team: row.home_team?.[0] ?? null,
-    away_team: row.away_team?.[0] ?? null,
-    referee: row.referee?.[0] ?? null,
-  }));
+  return (data ?? []) as any;
 }
 
 export async function getAssignedRefereeMatchIds() {
@@ -106,7 +80,7 @@ export async function getAssignedRefereeMatchIds() {
   return (data ?? []).map((row: { id: string }) => row.id);
 }
 
-export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
+export async function getMatchDetails(matchId: string) {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('matches')
@@ -116,6 +90,8 @@ export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
       kickoff_time,
       venue,
       status,
+      home_score,
+      away_score,
       home_jersey_color,
       away_jersey_color,
       home_team:teams!matches_home_team_id_fkey(id, name),
@@ -126,19 +102,7 @@ export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
     .single();
 
   if (error || !data) throw new Error('Match not found.');
-  const row = data as RawMatchDetails;
-  return {
-    id: row.id,
-    match_date: row.match_date,
-    kickoff_time: row.kickoff_time,
-    venue: row.venue,
-    status: row.status,
-    home_jersey_color: row.home_jersey_color,
-    away_jersey_color: row.away_jersey_color,
-    home_team: row.home_team?.[0] ?? null,
-    away_team: row.away_team?.[0] ?? null,
-    referee: row.referee?.[0] ?? null,
-  };
+  return data as any;
 }
 
 export async function getMatchLineupRows(matchId: string, teamId: string): Promise<MatchLineupRow[]> {
@@ -151,4 +115,83 @@ export async function getMatchLineupRows(matchId: string, teamId: string): Promi
 
   if (error) throw new Error('Could not load lineup.');
   return (data ?? []) as MatchLineupRow[];
+}
+
+export async function getMatchCardEvents(matchId: string): Promise<MatchCardEventRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from('card_events')
+    .select(`
+      id,
+      minute,
+      card_type,
+      reason,
+      referee_note,
+      player:players(id, full_name),
+      team:teams(id, name)
+    `)
+    .eq('match_id', matchId)
+    .order('minute', { ascending: true });
+
+  if (error) throw new Error('Could not load match cards.');
+  return (data ?? []) as any;
+}
+
+export async function getMatchUploads(matchId: string): Promise<MatchUploadRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from('team_sheet_uploads')
+    .select(`
+      id,
+      file_name,
+      file_url,
+      file_type,
+      uploaded_at,
+      team:teams(id, name)
+    `)
+    .eq('match_id', matchId)
+    .order('uploaded_at', { ascending: false });
+
+  if (error) throw new Error('Could not load match uploads.');
+  return (data ?? []) as any;
+}
+
+export async function getMatchReport(matchId: string, refereeId?: string | null) {
+  const supabase = await createServerSupabaseClient();
+  let query = supabase.from('referee_reports').select('*').eq('match_id', matchId);
+  if (refereeId) query = query.eq('referee_id', refereeId);
+  const { data, error } = await query.maybeSingle();
+  if (error) throw new Error('Could not load referee report.');
+  return data as any;
+}
+
+export async function getMatchesAssignedToCurrentReferee(email?: string | null): Promise<MatchListItem[]> {
+  const supabase = await createServerSupabaseClient();
+  if (!email) return [];
+
+  const { data: referee } = await supabase
+    .from('referees')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (!referee?.id) return [];
+
+  const { data, error } = await supabase
+    .from('matches')
+    .select(`
+      id,
+      match_date,
+      kickoff_time,
+      venue,
+      status,
+      home_team:teams!matches_home_team_id_fkey(id, name),
+      away_team:teams!matches_away_team_id_fkey(id, name),
+      referee:referees!matches_referee_id_fkey(id, full_name)
+    `)
+    .eq('referee_id', referee.id)
+    .order('match_date', { ascending: false });
+
+  if (error) throw new Error('Could not load assigned matches.');
+  return (data ?? []) as any;
 }

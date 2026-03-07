@@ -36,7 +36,7 @@ export function TeamSheetUploadForm({
         startTransition(async () => {
           try {
             const teamId = String(formData.get('teamId') ?? '');
-            const uploadResult = await uploadTeamSheet(file, matchId, teamId);
+            const uploadResult = await uploadTeamSheet({ matchId, teamId, file });
             await saveTeamSheetUpload({
               matchId,
               teamId,

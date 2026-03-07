@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 import { notFound, redirect } from "next/navigation";
 import { getTeamById, updateTeam } from "@/server/actions/teams";
-import { getVenues } from "@/server/actions/venues";
 import { PageHeader } from "@/components/ui/page-header";
 import { FormErrorAlert } from "@/components/ui/form-error-alert";
 import { withErrorQuery } from "@/lib/url";
@@ -18,7 +17,7 @@ export default async function EditTeamPage({
 }: EditTeamPageProps) {
   const { id } = await params;
   const { error } = await searchParams;
-  const [team, venues] = await Promise.all([getTeamById(id), getVenues()]);
+  const team = await getTeamById(id);
 
   if (!team) {
     notFound();
@@ -37,7 +36,7 @@ export default async function EditTeamPage({
     <div className="space-y-6">
       <PageHeader title={`Edit ${team.name}`} />
       <FormErrorAlert message={error} />
-      <TeamForm action={handleUpdateTeam} venues={venues} defaultValues={team} />
+      <TeamForm action={handleUpdateTeam} defaultValues={team} />
     </div>
   );
 }

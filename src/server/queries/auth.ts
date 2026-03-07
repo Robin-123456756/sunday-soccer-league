@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { AppRole, UserProfile } from "@/types/database";
 
-export async function getCurrentUserProfile(): Promise<UserProfile> {
+export async function getCurrentUserProfileOrNull(): Promise<UserProfile | null> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -9,7 +9,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile> {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    throw new Error("You must be signed in.");
+    return null;
   }
 
   const { data: profile, error } = await supabase
@@ -19,10 +19,20 @@ export async function getCurrentUserProfile(): Promise<UserProfile> {
     .single();
 
   if (error || !profile) {
-    throw new Error("Could not load your profile.");
+    return null;
   }
 
   return profile as UserProfile;
+}
+
+export async function getCurrentUserProfile(): Promise<UserProfile> {
+  const profile = await getCurrentUserProfileOrNull();
+
+  if (!profile) {
+    throw new Error("You must be signed in.");
+  }
+
+  return profile;
 }
 
 export async function requireRole(allowedRoles: AppRole[]) {
@@ -33,4 +43,10 @@ export async function requireRole(allowedRoles: AppRole[]) {
   }
 
   return profile;
+}
+
+export function getDefaultRouteForRole(role: AppRole) {
+  if (role === "team_manager") return "/team-manager/lineups";
+  if (role === "referee") return "/referee/assigned-matches";
+  return "/dashboard";
 }

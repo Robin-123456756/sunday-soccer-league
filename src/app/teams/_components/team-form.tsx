@@ -4,26 +4,20 @@ import Link from "next/link";
 import { FormField } from "@/components/ui/form-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-interface Venue {
-  id: string;
-  name: string;
-}
-
 interface TeamDefaultValues {
   name?: string;
   shortName?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
-  homeVenueId?: string | null;
+  homeVenue?: string | null;
 }
 
 interface TeamFormProps {
   action: (formData: FormData) => Promise<void>;
-  venues: Venue[];
   defaultValues?: TeamDefaultValues;
 }
 
-export function TeamForm({ action, venues, defaultValues }: TeamFormProps) {
+export function TeamForm({ action, defaultValues }: TeamFormProps) {
   return (
     <form
       action={action}
@@ -71,19 +65,14 @@ export function TeamForm({ action, venues, defaultValues }: TeamFormProps) {
           </FormField>
         </div>
 
-        <FormField label="Home Venue" name="homeVenueId">
-          <select
-            name="homeVenueId"
-            defaultValue={defaultValues?.homeVenueId ?? ""}
+        <FormField label="Home Venue" name="homeVenue">
+          <input
+            type="text"
+            name="homeVenue"
+            defaultValue={defaultValues?.homeVenue ?? ""}
             className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">Select a venue...</option>
-            {venues.map((venue) => (
-              <option key={venue.id} value={venue.id}>
-                {venue.name}
-              </option>
-            ))}
-          </select>
+            placeholder="e.g. Main Pitch"
+          />
         </FormField>
       </div>
 

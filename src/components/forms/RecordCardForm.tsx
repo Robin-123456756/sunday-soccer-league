@@ -1,12 +1,11 @@
 'use client';
 
-import type { FormEvent } from 'react';
 import { useMemo, useState, useTransition } from 'react';
+import type { FormEvent } from 'react';
 import { recordCardEvent } from '@/server/actions/cards';
 import { buttonStyle, cardStyle, gridStyle, inputStyle, labelStyle, sectionTitleStyle } from '@/components/ui/styles';
 import type { PlayerOption } from '@/server/queries/players';
 import type { TeamOption } from '@/server/queries/teams';
-import type { CardType } from '@/types/database';
 
 export function RecordCardForm({
   matchId,
@@ -38,7 +37,7 @@ export function RecordCardForm({
               matchId,
               teamId: String(formData.get('teamId') ?? ''),
               playerId: String(formData.get('playerId') ?? ''),
-              cardType: String(formData.get('cardType') ?? 'yellow') as CardType,
+              cardType: String(formData.get('cardType') ?? 'yellow') as any,
               minute: Number(formData.get('minute') ?? 0),
               reason: String(formData.get('reason') ?? ''),
               refereeNote: String(formData.get('refereeNote') ?? '') || null,

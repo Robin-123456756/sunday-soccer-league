@@ -27,11 +27,11 @@ export async function recordCardEvent(input: CardEventInput) {
     throw new Error("Match not found.");
   }
 
-  const refereeEmail = Array.isArray(match.referees)
-    ? (match.referees[0]?.email ?? "").toLowerCase()
-    : "";
-
-  if (profile.role === "referee" && refereeEmail !== (profile.email ?? "").toLowerCase()) {
+  if (
+    profile.role === "referee" &&
+    match.referees &&
+    (match.referees as any).email?.toLowerCase?.() !== (profile.email ?? "").toLowerCase()
+  ) {
     throw new Error("Referees can only record cards for matches assigned to them.");
   }
 

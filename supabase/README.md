@@ -1,36 +1,25 @@
 # Supabase Setup
 
 ## Files
-- `schema.sql`: full schema with RLS, storage policies, seed data, and role-hardening additions.
-- `migrations/20260307_role_hardening_and_actions.sql`: incremental role policy hardening for existing databases.
-- `migrations/00_schema.sql`: ordered baseline schema migration file.
-- `migrations/01_role_hardening.sql`: ordered role hardening migration file.
-- `migrations/RUNBOOK.md`: execution order and environment-specific guidance.
-- `imported/schema-1.sql`: imported external schema snapshot.
-- `imported/schema-2.sql`: imported external schema snapshot (same content as schema-1).
+- `schema.sql` — full database schema, RLS, storage bucket setup, and starter seed data.
 
-## Recommended Setup Paths
-
-### Path A: Fresh Database
+## Recommended order
 1. Create a Supabase project.
-2. Open SQL Editor.
-3. Run `supabase/migrations/00_schema.sql`.
-4. Run `supabase/migrations/01_role_hardening.sql`.
-5. Create auth users in Supabase Auth.
-6. Insert matching rows into `public.users_profile`.
-
-### Path B: Existing Database
-1. Ensure your current schema is already applied.
-2. Run `supabase/migrations/01_role_hardening.sql` (or `20260307_role_hardening_and_actions.sql`).
-3. Validate policy behavior for admin, referee, and team_manager roles.
+2. Open the SQL Editor.
+3. Run `supabase/schema.sql`.
+4. Create users in Supabase Auth.
+5. Insert matching rows into `public.users_profile`.
+6. Start adding teams, players, referees, and fixtures.
 
 ## Notes
-- `users_profile.id` must match `auth.users.id`.
-- Team sheet files use the `team-sheets` storage bucket.
-- RLS policies assume authenticated sessions.
-- Referee access checks rely on email matching between `users_profile.email` and `referees.email`.
+- `users_profile.id` must match the `auth.users.id` value.
+- Team sheet files are intended for the `team-sheets` storage bucket.
+- RLS assumes users are authenticated.
+- Referee access is matched by email in `users_profile.email` and `referees.email`.
 
-## Suggested Admin Bootstrap
+## Suggested first admin bootstrap
+After creating your first auth user, run something like:
+
 ```sql
 insert into public.users_profile (id, full_name, email, role)
 values (
@@ -40,3 +29,22 @@ values (
   'admin'
 );
 ```
+
+## Role rules now enforced
+- Team managers can edit only their own team lineups.
+- Referees can enter card events directly, but only for matches assigned to them.
+- Admins are the only users allowed to generate export files or export jobs.
+
+## New app files added
+- `src/lib/supabase/client.ts`
+- `src/lib/supabase/server.ts`
+- `src/lib/supabase/admin.ts`
+- `src/server/queries/auth.ts`
+- `src/server/queries/matches.ts`
+- `src/server/queries/players.ts`
+- `src/server/actions/matches.ts`
+- `src/server/actions/lineups.ts`
+- `src/server/actions/cards.ts`
+- `src/server/actions/referee-reports.ts`
+- `src/server/actions/uploads.ts`
+- `src/server/actions/exports.ts`

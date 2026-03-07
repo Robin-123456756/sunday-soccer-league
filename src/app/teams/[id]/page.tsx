@@ -1,16 +1,24 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getTeamById, deleteTeam } from "@/server/actions/teams";
+import { getTeamById } from "@/server/actions/teams";
+import { archiveTeam as deleteTeam } from "@/server/actions/archive";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { FormErrorAlert } from "@/components/ui/form-error-alert";
+import { withErrorQuery } from "@/lib/url";
 
 interface TeamDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }
 
-export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
+export default async function TeamDetailPage({
+  params,
+  searchParams,
+}: TeamDetailPageProps) {
   const { id } = await params;
+  const { error } = await searchParams;
   const team = await getTeamById(id);
 
   if (!team) {
@@ -19,7 +27,11 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
 
   async function handleDeleteTeam() {
     "use server";
-    await deleteTeam(id);
+    try {
+      await deleteTeam(id);
+    } catch (err) {
+      redirect(withErrorQuery(`/teams/${id}`, err instanceof Error ? err.message : "Could not archive team."));
+    }
     redirect("/teams");
   }
 
@@ -39,6 +51,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
           </div>
         }
       />
+      <FormErrorAlert message={error} />
 
       {/* Team Info */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -59,9 +72,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
           {team.homeVenue && (
             <div>
               <dt className="text-sm font-medium text-gray-500">Home Venue</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {team.homeVenue.name}
-              </dd>
+              <dd className="mt-1 text-sm text-gray-900">{team.homeVenue}</dd>
             </div>
           )}
           <div>

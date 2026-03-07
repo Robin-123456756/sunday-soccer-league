@@ -1,173 +1,98 @@
-export const dynamic = "force-dynamic";
-import Link from "next/link";
-import { getDb } from "@/lib/db";
-
-interface RecentMatch {
-  id: string;
-  matchDate: Date;
-  status: string;
-  homeScore: number | null;
-  awayScore: number | null;
-  homeTeam: {
-    name: string;
-    shortName: string | null;
-  };
-  awayTeam: {
-    name: string;
-    shortName: string | null;
-  };
-  venue: {
-    name: string;
-  } | null;
-}
+import Link from 'next/link';
+import {
+  cardStyle,
+  gridStyle,
+  mutedTextStyle,
+  pageStyle,
+  secondaryButtonStyle,
+  sectionTitleStyle,
+} from '@/components/ui/styles';
+import { getMatches } from '@/server/queries/matches';
+import { getDashboardStats, getRecentCardEvents } from '@/server/queries/dashboard';
 
 export default async function DashboardPage() {
-  const teamCount = await getDb().team.count({ where: { isActive: true } });
-  const playerCount = await getDb().player.count({ where: { isActive: true } });
-  const refereeCount = await getDb().referee.count({ where: { isActive: true } });
-  const matchCount = await getDb().match.count();
-  const recentMatches: RecentMatch[] = await getDb().match.findMany({
-    take: 5,
-    orderBy: { matchDate: "desc" },
-    include: {
-      homeTeam: { select: { name: true, shortName: true } },
-      awayTeam: { select: { name: true, shortName: true } },
-      venue: { select: { name: true } },
-    },
-  });
+  const [stats, matches, recentCards] = await Promise.all([
+    getDashboardStats(),
+    getMatches(),
+    getRecentCardEvents(),
+  ]);
 
-  const stats = [
-    { label: "Teams", value: teamCount, href: "/teams", color: "bg-blue-500" },
-    {
-      label: "Players",
-      value: playerCount,
-      href: "/players",
-      color: "bg-green-500",
-    },
-    {
-      label: "Referees",
-      value: refereeCount,
-      href: "/referees",
-      color: "bg-purple-500",
-    },
-    {
-      label: "Matches",
-      value: matchCount,
-      href: "/matches",
-      color: "bg-orange-500",
-    },
-  ];
+  const upcomingMatches = matches.slice(0, 5);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Dashboard</h1>
+    <main style={pageStyle}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 20 }}>
+        <div>
+          <h1 style={{ marginBottom: 8 }}>Sunday Soccer League Dashboard</h1>
+          <p style={mutedTextStyle}>Review fixtures, reports, incidents, teams, and exports from one place.</p>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            href={stat.href}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  {stat.label}
-                </p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">
-                  {stat.value}
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
-              >
-                <span className="text-white text-lg font-bold">
-                  {stat.label[0]}
-                </span>
-              </div>
+        <div style={gridStyle}>
+          <StatCard label="Matches" value={stats.totalMatches} helper={`${stats.scheduledMatches} scheduled · ${stats.completedMatches} completed`} />
+          <StatCard label="Teams" value={stats.totalTeams} helper="Registered clubs in the league" />
+          <StatCard label="Players" value={stats.totalPlayers} helper="Available across all squads" />
+          <StatCard label="Referees" value={stats.totalReferees} helper={`${stats.pendingReports} matches need referee reports`} />
+        </div>
+
+        <div style={gridStyle}>
+          <div style={{ ...cardStyle, minHeight: 320 }}>
+            <h2 style={sectionTitleStyle}>Quick actions</h2>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <Link href="/matches/new" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Create match</Link>
+              <Link href="/matches" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Open matches</Link>
+              <Link href="/players" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>View players</Link>
+              <Link href="/reports/exports" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Generate export</Link>
             </div>
-          </Link>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Recent Matches
-            </h2>
-            <Link
-              href="/matches"
-              className="text-sm text-green-600 hover:text-green-700"
-            >
-              View all
-            </Link>
+            <p style={{ ...mutedTextStyle, marginTop: 14 }}>Total recorded card events: {stats.totalCards}</p>
           </div>
-          {recentMatches.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4">No matches yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {recentMatches.map((match) => (
-                <Link
-                  key={match.id}
-                  href={`/matches/${match.id}`}
-                  className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {match.homeTeam.shortName ?? match.homeTeam.name} vs{" "}
-                        {match.awayTeam.shortName ?? match.awayTeam.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(match.matchDate).toLocaleDateString()}
-                        {match.venue && ` - ${match.venue.name}`}
-                      </p>
-                    </div>
-                    {match.status === "completed" && (
-                      <p className="text-sm font-bold text-gray-900">
-                        {match.homeScore} - {match.awayScore}
-                      </p>
-                    )}
+
+          <div style={{ ...cardStyle, minHeight: 320 }}>
+            <h2 style={sectionTitleStyle}>Recent matches</h2>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {upcomingMatches.length === 0 ? (
+                <p style={mutedTextStyle}>No matches have been created yet.</p>
+              ) : (
+                upcomingMatches.map((match) => (
+                  <div key={match.id} style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 12 }}>
+                    <strong>{match.home_team?.name ?? 'Home'} vs {match.away_team?.name ?? 'Away'}</strong>
+                    <p style={{ ...mutedTextStyle, marginTop: 6 }}>{match.match_date} · {match.kickoff_time ?? 'Time TBD'} · {match.status}</p>
+                    <Link href={`/matches/${match.id}`} style={{ color: '#111827' }}>Open match →</Link>
                   </div>
-                </Link>
-              ))}
+                ))
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Quick Actions
-          </h2>
-          <div className="space-y-2">
-            <Link
-              href="/teams/create"
-              className="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 transition-colors"
-            >
-              + Create New Team
-            </Link>
-            <Link
-              href="/players/create"
-              className="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 transition-colors"
-            >
-              + Register New Player
-            </Link>
-            <Link
-              href="/referees/create"
-              className="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 transition-colors"
-            >
-              + Add New Referee
-            </Link>
-            <Link
-              href="/matches/create"
-              className="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700 transition-colors"
-            >
-              + Create New Fixture
-            </Link>
+        <div style={cardStyle}>
+          <h2 style={sectionTitleStyle}>Recent card incidents</h2>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {recentCards.length === 0 ? (
+              <p style={mutedTextStyle}>No card incidents recorded yet.</p>
+            ) : (
+              recentCards.map((event) => (
+                <div key={event.id} style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 12 }}>
+                  <strong>{event.player?.full_name ?? 'Unknown player'}</strong>
+                  <p style={{ ...mutedTextStyle, marginTop: 6 }}>
+                    {event.match?.home_team?.name ?? 'Home'} vs {event.match?.away_team?.name ?? 'Away'} · {event.card_type} · {event.minute}'
+                  </p>
+                  <p style={{ ...mutedTextStyle, marginTop: 6 }}>{event.reason}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
+    </main>
+  );
+}
+
+function StatCard({ label, value, helper }: { label: string; value: number; helper: string }) {
+  return (
+    <div style={cardStyle}>
+      <p style={{ ...mutedTextStyle, marginBottom: 10 }}>{label}</p>
+      <div style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>{value}</div>
+      <p style={mutedTextStyle}>{helper}</p>
     </div>
   );
 }

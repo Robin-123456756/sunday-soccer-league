@@ -4,23 +4,18 @@ export type CardType = "yellow" | "red" | "second_yellow_red";
 
 export interface Match {
   id: string;
-  seasonId?: string;
   matchdayId?: string;
   matchDate: string;
-  kickoffTime?: string;
-  venueId?: string;
+  kickoffTimeLabel?: string;
+  venue?: string;
   homeTeamId: string;
   awayTeamId: string;
   homeJerseyColor?: string;
   awayJerseyColor?: string;
   refereeId?: string;
-  assistantReferee1Id?: string;
-  assistantReferee2Id?: string;
   status: MatchStatus;
   homeScore?: number;
   awayScore?: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface MatchLineup {
@@ -30,7 +25,6 @@ export interface MatchLineup {
   playerId: string;
   lineupType: LineupType;
   isCaptain: boolean;
-  createdAt: string;
 }
 
 export interface Substitution {
@@ -41,7 +35,6 @@ export interface Substitution {
   playerOnId: string;
   minute: number;
   reason?: string;
-  createdAt: string;
 }
 
 export interface CardEvent {
@@ -53,14 +46,4 @@ export interface CardEvent {
   minute: number;
   reason: string;
   refereeNote?: string;
-  createdAt: string;
-}
-
-export interface MatchWithDetails extends Match {
-  homeTeam: { id: string; name: string; shortName?: string };
-  awayTeam: { id: string; name: string; shortName?: string };
-  venue?: { id: string; name: string };
-  referee?: { id: string; fullName: string };
-  season?: { id: string; name: string };
-  matchday?: { id: string; name: string };
 }

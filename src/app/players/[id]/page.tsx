@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getPlayerById, deletePlayer } from "@/server/actions/players";
+import { getPlayerById } from "@/server/actions/players";
+import { archivePlayer as deletePlayer } from "@/server/actions/archive";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 
@@ -76,20 +77,6 @@ export default async function PlayerDetailPage({
             <dt className="text-sm font-medium text-gray-500">Position</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {player.position ?? <span className="text-gray-400">Not set</span>}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Date of Birth</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {player.dateOfBirth ? (
-                new Date(player.dateOfBirth).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })
-              ) : (
-                <span className="text-gray-400">Not set</span>
-              )}
             </dd>
           </div>
           <div>

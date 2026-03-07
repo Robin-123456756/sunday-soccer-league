@@ -10,15 +10,14 @@ export interface PlayerOption {
   team_id: string;
 }
 
-interface PlayerExportSourceRow {
+export interface PlayerListItem {
+  id: string;
   full_name: string;
   jersey_number: number | null;
   position: string | null;
   registration_number: string | null;
   is_active: boolean;
-  teams: { name: string }[] | null;
-  card_events: { card_type: string }[] | null;
-  match_lineups: { id: string }[] | null;
+  team_name: string | null;
 }
 
 export async function getExportablePlayerRows(filters: ExportPlayerFilters = {}): Promise<PlayerExportRow[]> {
@@ -53,19 +52,19 @@ export async function getExportablePlayerRows(filters: ExportPlayerFilters = {})
     throw new Error('Could not load player export data.');
   }
 
-  return ((data ?? []) as PlayerExportSourceRow[]).map((player) => {
+  return (data ?? []).map((player: any) => {
     const cardEvents = Array.isArray(player.card_events) ? player.card_events : [];
     const lineups = Array.isArray(player.match_lineups) ? player.match_lineups : [];
 
     return {
       fullName: player.full_name,
-      teamName: player.teams?.[0]?.name ?? '',
-      jerseyNumber: player.jersey_number ?? undefined,
-      position: player.position ?? undefined,
-      registrationNumber: player.registration_number ?? undefined,
+      teamName: player.teams?.name ?? '',
+      jerseyNumber: player.jersey_number ?? '',
+      position: player.position ?? '',
+      registrationNumber: player.registration_number ?? '',
       isActive: player.is_active,
-      yellowCards: cardEvents.filter((event) => event.card_type === 'yellow').length,
-      redCards: cardEvents.filter((event) => event.card_type !== 'yellow').length,
+      yellowCards: cardEvents.filter((event: any) => event.card_type === 'yellow').length,
+      redCards: cardEvents.filter((event: any) => event.card_type !== 'yellow').length,
       appearances: lineups.length,
     } satisfies PlayerExportRow;
   });
@@ -82,4 +81,24 @@ export async function getPlayersByTeam(teamId: string): Promise<PlayerOption[]> 
 
   if (error) throw new Error('Could not load players.');
   return (data ?? []) as PlayerOption[];
+}
+
+export async function getPlayersList(): Promise<PlayerListItem[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from('players')
+    .select('id, full_name, jersey_number, position, registration_number, is_active, teams(name)')
+    .order('full_name');
+
+  if (error) throw new Error('Could not load players list.');
+
+  return (data ?? []).map((player: any) => ({
+    id: player.id,
+    full_name: player.full_name,
+    jersey_number: player.jersey_number ?? null,
+    position: player.position ?? null,
+    registration_number: player.registration_number ?? null,
+    is_active: Boolean(player.is_active),
+    team_name: player.teams?.name ?? null,
+  }));
 }

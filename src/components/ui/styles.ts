@@ -59,3 +59,57 @@ export const sectionTitleStyle: CSSProperties = {
   fontWeight: 700,
   margin: '0 0 16px',
 };
+
+export const shellStyle: CSSProperties = {
+  minHeight: '100vh',
+  background: '#f7f7fb',
+  color: '#111827',
+  fontFamily: 'Arial, sans-serif',
+};
+
+export const navStyle: CSSProperties = {
+  display: 'flex',
+  gap: 12,
+  flexWrap: 'wrap',
+  padding: '16px 24px',
+  borderBottom: '1px solid #e5e7eb',
+  background: '#ffffff',
+  position: 'sticky',
+  top: 0,
+  zIndex: 20,
+};
+
+export const tableStyle: CSSProperties = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  fontSize: 14,
+};
+
+export const thStyle: CSSProperties = {
+  textAlign: 'left',
+  padding: '12px 10px',
+  borderBottom: '1px solid #e5e7eb',
+  color: '#374151',
+  fontWeight: 700,
+  background: '#f9fafb',
+};
+
+export const tdStyle: CSSProperties = {
+  padding: '12px 10px',
+  borderBottom: '1px solid #e5e7eb',
+  verticalAlign: 'top',
+};
+
+export const badgeBaseStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  borderRadius: 999,
+  padding: '4px 10px',
+  fontSize: 12,
+  fontWeight: 700,
+};
+
+export const mutedTextStyle: CSSProperties = {
+  color: '#4b5563',
+  margin: 0,
+};
