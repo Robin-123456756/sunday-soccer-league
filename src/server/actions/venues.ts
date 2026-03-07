@@ -1,10 +1,10 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function getVenues() {
-  return prisma.venue.findMany({
+  return getDb().venue.findMany({
     orderBy: { name: "asc" },
   });
 }
@@ -18,7 +18,7 @@ export async function createVenue(formData: FormData) {
     return { error: "Venue name is required" };
   }
 
-  await prisma.venue.create({
+  await getDb().venue.create({
     data: {
       name,
       address: address || null,

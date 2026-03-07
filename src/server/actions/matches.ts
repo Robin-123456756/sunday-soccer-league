@@ -1,7 +1,7 @@
 "use server";
 
 import { MatchStatus } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 const validMatchStatuses = new Set<MatchStatus>(Object.values(MatchStatus));
@@ -23,7 +23,7 @@ export async function getMatches(filters?: {
 }) {
   const status = parseMatchStatus(filters?.status);
 
-  return prisma.match.findMany({
+  return getDb().match.findMany({
     where: {
       ...(filters?.seasonId ? { seasonId: filters.seasonId } : {}),
       ...(filters?.teamId
@@ -49,7 +49,7 @@ export async function getMatches(filters?: {
 }
 
 export async function getMatchById(id: string) {
-  return prisma.match.findUnique({
+  return getDb().match.findUnique({
     where: { id },
     include: {
       homeTeam: {
@@ -122,7 +122,7 @@ export async function createMatch(formData: FormData) {
     return { error: "Home team and away team cannot be the same" };
   }
 
-  await prisma.match.create({
+  await getDb().match.create({
     data: {
       matchDate: new Date(matchDate),
       kickoffTime: kickoffTime || null,
@@ -172,7 +172,7 @@ export async function updateMatch(id: string, formData: FormData) {
     return { error: "Invalid match status" };
   }
 
-  await prisma.match.update({
+  await getDb().match.update({
     where: { id },
     data: {
       matchDate: new Date(matchDate),
@@ -197,7 +197,7 @@ export async function updateMatch(id: string, formData: FormData) {
 }
 
 export async function deleteMatch(id: string) {
-  await prisma.match.delete({ where: { id } });
+  await getDb().match.delete({ where: { id } });
 
   revalidatePath("/matches");
   return { success: true };

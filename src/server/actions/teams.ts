@@ -1,10 +1,10 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function getTeams() {
-  return prisma.team.findMany({
+  return getDb().team.findMany({
     where: { isActive: true },
     include: { _count: { select: { players: true } }, homeVenue: true },
     orderBy: { name: "asc" },
@@ -12,7 +12,7 @@ export async function getTeams() {
 }
 
 export async function getTeamById(id: string) {
-  return prisma.team.findUnique({
+  return getDb().team.findUnique({
     where: { id },
     include: {
       players: { where: { isActive: true }, orderBy: { fullName: "asc" } },
@@ -33,12 +33,12 @@ export async function createTeam(formData: FormData) {
     return { error: "Team name is required" };
   }
 
-  const existing = await prisma.team.findUnique({ where: { name } });
+  const existing = await getDb().team.findUnique({ where: { name } });
   if (existing) {
     return { error: "A team with this name already exists" };
   }
 
-  await prisma.team.create({
+  await getDb().team.create({
     data: {
       name,
       shortName,
@@ -64,14 +64,14 @@ export async function updateTeam(id: string, formData: FormData) {
     return { error: "Team name is required" };
   }
 
-  const existing = await prisma.team.findFirst({
+  const existing = await getDb().team.findFirst({
     where: { name, NOT: { id } },
   });
   if (existing) {
     return { error: "A team with this name already exists" };
   }
 
-  await prisma.team.update({
+  await getDb().team.update({
     where: { id },
     data: {
       name,
@@ -88,7 +88,7 @@ export async function updateTeam(id: string, formData: FormData) {
 }
 
 export async function deleteTeam(id: string) {
-  await prisma.team.update({
+  await getDb().team.update({
     where: { id },
     data: { isActive: false },
   });

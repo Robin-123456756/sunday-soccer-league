@@ -1,10 +1,10 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function getPlayers(teamId?: string) {
-  return prisma.player.findMany({
+  return getDb().player.findMany({
     where: {
       isActive: true,
       ...(teamId ? { teamId } : {}),
@@ -15,7 +15,7 @@ export async function getPlayers(teamId?: string) {
 }
 
 export async function getPlayerById(id: string) {
-  return prisma.player.findUnique({
+  return getDb().player.findUnique({
     where: { id },
     include: { team: { select: { id: true, name: true, shortName: true } } },
   });
@@ -34,13 +34,13 @@ export async function createPlayer(formData: FormData) {
     return { error: "Player name and team are required" };
   }
 
-  const team = await prisma.team.findUnique({ where: { id: teamId } });
+  const team = await getDb().team.findUnique({ where: { id: teamId } });
   if (!team) {
     return { error: "Selected team does not exist" };
   }
 
   if (registrationNumber) {
-    const existing = await prisma.player.findUnique({
+    const existing = await getDb().player.findUnique({
       where: { registrationNumber },
     });
     if (existing) {
@@ -48,7 +48,7 @@ export async function createPlayer(formData: FormData) {
     }
   }
 
-  await prisma.player.create({
+  await getDb().player.create({
     data: {
       fullName,
       teamId,
@@ -78,7 +78,7 @@ export async function updatePlayer(id: string, formData: FormData) {
   }
 
   if (registrationNumber) {
-    const existing = await prisma.player.findFirst({
+    const existing = await getDb().player.findFirst({
       where: { registrationNumber, NOT: { id } },
     });
     if (existing) {
@@ -86,7 +86,7 @@ export async function updatePlayer(id: string, formData: FormData) {
     }
   }
 
-  await prisma.player.update({
+  await getDb().player.update({
     where: { id },
     data: {
       fullName,
@@ -105,10 +105,10 @@ export async function updatePlayer(id: string, formData: FormData) {
 }
 
 export async function deletePlayer(id: string) {
-  const player = await prisma.player.findUnique({ where: { id } });
+  const player = await getDb().player.findUnique({ where: { id } });
   if (!player) return { error: "Player not found" };
 
-  await prisma.player.update({
+  await getDb().player.update({
     where: { id },
     data: { isActive: false },
   });

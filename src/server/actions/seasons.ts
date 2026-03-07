@@ -1,17 +1,17 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function getSeasons() {
-  return prisma.season.findMany({
+  return getDb().season.findMany({
     include: { _count: { select: { matchdays: true, matches: true } } },
     orderBy: { startDate: "desc" },
   });
 }
 
 export async function getSeasonWithMatchdays(seasonId: string) {
-  return prisma.season.findUnique({
+  return getDb().season.findUnique({
     where: { id: seasonId },
     include: {
       matchdays: { orderBy: { date: "asc" } },
@@ -28,7 +28,7 @@ export async function createSeason(formData: FormData) {
     return { error: "Season name, start date, and end date are required" };
   }
 
-  await prisma.season.create({
+  await getDb().season.create({
     data: {
       name,
       startDate: new Date(startDate),
@@ -41,7 +41,7 @@ export async function createSeason(formData: FormData) {
 }
 
 export async function getMatchdays(seasonId: string) {
-  return prisma.matchday.findMany({
+  return getDb().matchday.findMany({
     where: { seasonId },
     orderBy: { date: "asc" },
   });
@@ -56,7 +56,7 @@ export async function createMatchday(formData: FormData) {
     return { error: "Season and matchday name are required" };
   }
 
-  await prisma.matchday.create({
+  await getDb().matchday.create({
     data: {
       seasonId,
       name,

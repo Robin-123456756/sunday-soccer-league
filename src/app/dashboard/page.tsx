@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 interface RecentMatch {
   id: string;
@@ -22,11 +22,11 @@ interface RecentMatch {
 }
 
 export default async function DashboardPage() {
-  const teamCount = await prisma.team.count({ where: { isActive: true } });
-  const playerCount = await prisma.player.count({ where: { isActive: true } });
-  const refereeCount = await prisma.referee.count({ where: { isActive: true } });
-  const matchCount = await prisma.match.count();
-  const recentMatches: RecentMatch[] = await prisma.match.findMany({
+  const teamCount = await getDb().team.count({ where: { isActive: true } });
+  const playerCount = await getDb().player.count({ where: { isActive: true } });
+  const refereeCount = await getDb().referee.count({ where: { isActive: true } });
+  const matchCount = await getDb().match.count();
+  const recentMatches: RecentMatch[] = await getDb().match.findMany({
     take: 5,
     orderBy: { matchDate: "desc" },
     include: {

@@ -1,17 +1,17 @@
 "use server";
 
-import { prisma } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function getReferees() {
-  return prisma.referee.findMany({
+  return getDb().referee.findMany({
     where: { isActive: true },
     orderBy: { fullName: "asc" },
   });
 }
 
 export async function getRefereeById(id: string) {
-  return prisma.referee.findUnique({
+  return getDb().referee.findUnique({
     where: { id },
   });
 }
@@ -26,7 +26,7 @@ export async function createReferee(formData: FormData) {
     return { error: "Referee name is required" };
   }
 
-  await prisma.referee.create({
+  await getDb().referee.create({
     data: {
       fullName,
       phone: phone || null,
@@ -49,7 +49,7 @@ export async function updateReferee(id: string, formData: FormData) {
     return { error: "Referee name is required" };
   }
 
-  await prisma.referee.update({
+  await getDb().referee.update({
     where: { id },
     data: {
       fullName,
@@ -65,7 +65,7 @@ export async function updateReferee(id: string, formData: FormData) {
 }
 
 export async function deleteReferee(id: string) {
-  await prisma.referee.update({
+  await getDb().referee.update({
     where: { id },
     data: { isActive: false },
   });
