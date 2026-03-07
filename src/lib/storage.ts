@@ -2,6 +2,19 @@ import { supabase } from "./supabase";
 
 const BUCKET_NAME = "team-sheets";
 
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+];
+
+export function validateTeamSheetFile(file: File): void {
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error("Only JPG, PNG, WEBP, and PDF team sheet files are allowed.");
+  }
+}
+
 export async function uploadTeamSheet(
   file: File,
   matchId: string,

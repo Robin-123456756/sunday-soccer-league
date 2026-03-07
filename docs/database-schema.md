@@ -230,3 +230,25 @@ Audit trail for data exports.
 | fileUrl | String? | Generated file URL |
 | status | Enum | pending, completed, failed |
 | createdAt | DateTime | Auto-set |
+
+---
+
+## Role Hardening Additions (2026-03-07)
+
+The Supabase SQL layer now includes role-specific helper functions and stricter policies:
+
+### Helper Functions
+- `current_user_team_id()`
+- `current_user_email()`
+- `current_referee_id()`
+- `team_is_in_match(match_id, team_id)`
+- `is_match_referee(match_id)`
+
+### Policy Hardening
+- `match_lineups`: team managers can only manage lineups for their own team, and only when that team is in the match.
+- `card_events`: referees can only manage card events for matches assigned to them.
+- `export_jobs`: admin-only management.
+
+### File Locations
+- Full schema: `supabase/schema.sql`
+- Incremental migration: `supabase/migrations/20260307_role_hardening_and_actions.sql`

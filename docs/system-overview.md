@@ -1,50 +1,57 @@
 # System Overview
 
-## Sunday Soccer League - Matchday Recording System
+## Sunday Soccer League Matchday Recording System
 
-### What is this system?
-A digital platform for managing Sunday soccer league operations. It replaces paper-based team sheets and manual record-keeping with a centralized system that captures every aspect of matchday activity.
+### What This System Is
+A digital platform for Sunday league operations that replaces paper-based records with structured, searchable matchday data.
 
 ### Core Purpose
 - Record and store matchday information digitally
-- Provide a historical archive of all league matches
-- Streamline discipline tracking and referee reporting
-- Eliminate paper team sheet loss
+- Keep historical team, player, referee, and fixture records
+- Support discipline tracking and match reporting workflows
+- Prepare the foundation for uploads, exports, and reporting automation
 
-### System Actors
+### Primary Actors
 
 #### League Admin
-The primary system user. Manages all league data including teams, players, referees, fixtures, and match records. Has full read/write access to everything in the system.
+Main operator with full create/read/update/deactivate access across teams, players, referees, fixtures, seasons, and venues.
 
 #### Referee
-Assigned to matches by the admin. Submits match reports including discipline events (cards), general observations on time management, dress code, organization, and team conduct.
+Assigned official who can later submit referee observations and discipline incidents.
 
-#### Team Manager / Team Official
-Represents a team. Submits team lineups (starters and bench), uploads physical team sheet images, and reviews historical team sheet records.
+#### Team Manager
+Team representative who can later submit lineups and upload team sheet files.
 
-### How It Works
+### Delivery Status
 
-1. **Pre-Match**: Admin creates fixtures, assigns referees. Team managers submit lineups and upload team sheet images.
-2. **Match Day**: Referees record cards, substitutions, and match events as they happen.
-3. **Post-Match**: Referees submit their full match report with observations. Admin reviews and finalizes the match record.
-4. **Historical Access**: All records are permanently stored and searchable by matchday, team, player, referee, card type, or date range.
+| Module | Current Status | Notes |
+|--------|----------------|-------|
+| Dashboard | Implemented | KPI cards, recent matches, quick actions |
+| Teams | Implemented | List/create/detail/edit/deactivate |
+| Players | Implemented | List/create/detail/edit/deactivate |
+| Referees | Implemented | List/create/detail/edit/deactivate |
+| Matches | Implemented | List/create/detail/edit and status handling |
+| Seasons and Venues | Implemented (data layer) | Server actions available for match form population |
+| Authentication and RBAC | Planned | Actor model defined, enforcement pending |
+| Lineups, Cards, Substitutions, Reports | Planned | Data model exists; UI/workflows pending |
+| Uploads and Exports | Planned | Utility/model scaffolding exists |
 
-### System Modules
-
-| Module | Responsibility |
-|--------|---------------|
-| Authentication | Login, role-based access control |
-| League Management | Teams, players, referees, venues, seasons |
-| Match Management | Fixtures, lineups, results, match reports |
-| Discipline | Cards, caution reasons, repeat offender tracking |
-| Media Storage | Team sheet image upload and retrieval |
-| Reporting | Match, referee, discipline, and team history reports |
-| Export | CSV and Excel exports of player and match data |
+### Documentation Set
+- `docs/system-overview.md`
+- `docs/requirements.md`
+- `docs/user-flows.md`
+- `docs/database-schema.md`
+- `docs/api-spec.md`
+- `docs/referee-report-format.md`
+- `docs/ui-ux-spec.md`
+- `docs/design-system.md`
+- `docs/information-architecture.md`
+- `docs/component-inventory.md`
+- `docs/wireframes.md`
 
 ### Tech Stack
-- **Frontend**: Next.js (App Router) + TypeScript + Tailwind CSS
-- **Backend**: Next.js API Routes / Server Actions
-- **Database**: PostgreSQL via Supabase
-- **ORM**: Prisma
-- **Auth**: Supabase Auth
-- **File Storage**: Supabase Storage
+- Frontend: Next.js (App Router), TypeScript, Tailwind CSS
+- Backend: Next.js server actions
+- Database: PostgreSQL (Supabase)
+- ORM: Prisma
+- File/Auth Services: Supabase Storage/Auth (planned integrations)

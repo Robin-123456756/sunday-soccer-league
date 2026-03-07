@@ -62,6 +62,19 @@
 6. **Reliability**: Match records must be durable and not subject to accidental deletion.
 7. **Performance**: Search and filtering operations must return results within 2 seconds for typical dataset sizes.
 
+## UI/UX Requirements
+1. The system must provide consistent primary actions and status colors across Teams, Players, Referees, and Matches sections.
+2. Every create/edit form must display validation errors inline or as an on-page alert without dropping user context.
+3. Empty data states must provide a clear next action.
+4. Match status values must be visually encoded with badges (scheduled, in progress, completed, postponed).
+5. Desktop layout must keep navigation persistent while preserving readable content width.
+6. Mobile layout must remain usable for list browsing and form submission.
+
+## Current Implementation Snapshot
+- Implemented now: dashboard, teams, players, referees, matches CRUD pages and server actions.
+- Partially implemented: seasons/venues data support in fixture creation.
+- Planned next: lineups, substitutions, cards, referee reports, uploads, and export UI.
+
 ## Validation Rules
 - Home team and away team cannot be the same.
 - A player cannot be both starter and bench in the same match.

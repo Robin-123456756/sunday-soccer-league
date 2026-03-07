@@ -13,3 +13,15 @@ export interface Player {
 export interface PlayerWithTeam extends Player {
   team: { id: string; name: string; shortName?: string };
 }
+
+export interface PlayerExportRow {
+  fullName: string;
+  teamName: string;
+  jerseyNumber?: number;
+  position?: string;
+  registrationNumber?: string;
+  isActive: boolean;
+  yellowCards?: number;
+  redCards?: number;
+  appearances?: number;
+}
