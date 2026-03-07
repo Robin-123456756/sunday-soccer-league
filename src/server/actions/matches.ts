@@ -1,13 +1,28 @@
 "use server";
 
+import { MatchStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+
+const validMatchStatuses = new Set<MatchStatus>(Object.values(MatchStatus));
+
+function parseMatchStatus(value?: string): MatchStatus | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return validMatchStatuses.has(value as MatchStatus)
+    ? (value as MatchStatus)
+    : undefined;
+}
 
 export async function getMatches(filters?: {
   seasonId?: string;
   teamId?: string;
   status?: string;
 }) {
+  const status = parseMatchStatus(filters?.status);
+
   return prisma.match.findMany({
     where: {
       ...(filters?.seasonId ? { seasonId: filters.seasonId } : {}),
@@ -19,7 +34,7 @@ export async function getMatches(filters?: {
             ],
           }
         : {}),
-      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(status ? { status } : {}),
     },
     include: {
       homeTeam: { select: { id: true, name: true, shortName: true } },
@@ -140,7 +155,8 @@ export async function updateMatch(id: string, formData: FormData) {
   const refereeId = (formData.get("refereeId") as string) || undefined;
   const seasonId = (formData.get("seasonId") as string) || undefined;
   const matchdayId = (formData.get("matchdayId") as string) || undefined;
-  const status = (formData.get("status") as string) || undefined;
+  const statusInput = (formData.get("status") as string) || undefined;
+  const status = parseMatchStatus(statusInput);
   const homeScore = formData.get("homeScore") as string;
   const awayScore = formData.get("awayScore") as string;
 
@@ -150,6 +166,10 @@ export async function updateMatch(id: string, formData: FormData) {
 
   if (homeTeamId === awayTeamId) {
     return { error: "Home team and away team cannot be the same" };
+  }
+
+  if (statusInput && !status) {
+    return { error: "Invalid match status" };
   }
 
   await prisma.match.update({
@@ -165,7 +185,7 @@ export async function updateMatch(id: string, formData: FormData) {
       refereeId: refereeId || null,
       seasonId: seasonId || null,
       matchdayId: matchdayId || null,
-      status: (status as any) || undefined,
+      status: status || undefined,
       homeScore: homeScore ? parseInt(homeScore, 10) : null,
       awayScore: awayScore ? parseInt(awayScore, 10) : null,
     },

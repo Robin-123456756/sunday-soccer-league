@@ -3,20 +3,33 @@ import { redirect } from "next/navigation";
 import { createTeam } from "@/server/actions/teams";
 import { getVenues } from "@/server/actions/venues";
 import { PageHeader } from "@/components/ui/page-header";
+import { FormErrorAlert } from "@/components/ui/form-error-alert";
+import { withErrorQuery } from "@/lib/url";
 import { TeamForm } from "../_components/team-form";
 
-export default async function CreateTeamPage() {
+interface CreateTeamPageProps {
+  searchParams: Promise<{ error?: string }>;
+}
+
+export default async function CreateTeamPage({
+  searchParams,
+}: CreateTeamPageProps) {
+  const { error } = await searchParams;
   const venues = await getVenues();
 
   async function handleCreateTeam(formData: FormData) {
     "use server";
-    await createTeam(formData);
+    const result = await createTeam(formData);
+    if (result?.error) {
+      redirect(withErrorQuery("/teams/create", result.error));
+    }
     redirect("/teams");
   }
 
   return (
     <div className="space-y-6">
       <PageHeader title="Create Team" />
+      <FormErrorAlert message={error} />
       <TeamForm action={handleCreateTeam} venues={venues} />
     </div>
   );

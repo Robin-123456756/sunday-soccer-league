@@ -8,7 +8,6 @@ export async function uploadTeamSheet(
   teamId: string,
   seasonId?: string
 ): Promise<{ fileName: string; fileUrl: string; fileType: string }> {
-  const fileExt = file.name.split(".").pop();
   const fileName = `${Date.now()}-${file.name}`;
   const filePath = `${seasonId ?? "default"}/${matchId}/${teamId}/${fileName}`;
 

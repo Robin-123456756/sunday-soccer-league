@@ -6,9 +6,18 @@ import { getReferees } from "@/server/actions/referees";
 import { getVenues } from "@/server/actions/venues";
 import { getSeasons } from "@/server/actions/seasons";
 import { PageHeader } from "@/components/ui/page-header";
+import { FormErrorAlert } from "@/components/ui/form-error-alert";
+import { withErrorQuery } from "@/lib/url";
 import { MatchForm } from "../_components/match-form";
 
-export default async function CreateMatchPage() {
+interface CreateMatchPageProps {
+  searchParams: Promise<{ error?: string }>;
+}
+
+export default async function CreateMatchPage({
+  searchParams,
+}: CreateMatchPageProps) {
+  const { error } = await searchParams;
   const [teams, referees, venues, seasons] = await Promise.all([
     getTeams(),
     getReferees(),
@@ -18,13 +27,17 @@ export default async function CreateMatchPage() {
 
   async function handleCreateMatch(formData: FormData) {
     "use server";
-    await createMatch(formData);
+    const result = await createMatch(formData);
+    if (result?.error) {
+      redirect(withErrorQuery("/matches/create", result.error));
+    }
     redirect("/matches");
   }
 
   return (
     <div className="space-y-6">
       <PageHeader title="Create Fixture" />
+      <FormErrorAlert message={error} />
       <MatchForm
         action={handleCreateMatch}
         teams={teams}

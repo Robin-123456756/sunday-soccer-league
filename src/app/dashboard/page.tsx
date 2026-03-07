@@ -2,12 +2,31 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 
+interface RecentMatch {
+  id: string;
+  matchDate: Date;
+  status: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: {
+    name: string;
+    shortName: string | null;
+  };
+  awayTeam: {
+    name: string;
+    shortName: string | null;
+  };
+  venue: {
+    name: string;
+  } | null;
+}
+
 export default async function DashboardPage() {
   const teamCount = await prisma.team.count({ where: { isActive: true } });
   const playerCount = await prisma.player.count({ where: { isActive: true } });
   const refereeCount = await prisma.referee.count({ where: { isActive: true } });
   const matchCount = await prisma.match.count();
-  const recentMatches = await prisma.match.findMany({
+  const recentMatches: RecentMatch[] = await prisma.match.findMany({
     take: 5,
     orderBy: { matchDate: "desc" },
     include: {
