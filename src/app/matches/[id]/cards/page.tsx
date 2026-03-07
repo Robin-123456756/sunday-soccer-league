@@ -4,8 +4,8 @@ import { pageStyle } from '@/components/ui/styles';
 import { getMatchDetails } from '@/server/queries/matches';
 import { getPlayersByTeam } from '@/server/queries/players';
 
-export default async function MatchCardsPage({ params }: { params: Promise<{ matchId: string }> }) {
-  const { matchId } = await params;
+export default async function MatchCardsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: matchId } = await params;
   const match = await getMatchDetails(matchId);
   const teams = [match.home_team, match.away_team].filter(Boolean) as Array<{ id: string; name: string }>;
   const playerEntries = await Promise.all(teams.map(async (team) => [team.id, await getPlayersByTeam(team.id)] as const));

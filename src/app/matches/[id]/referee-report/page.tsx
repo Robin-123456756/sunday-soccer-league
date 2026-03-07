@@ -13,8 +13,8 @@ interface RefereeReportValues {
   incidents?: string | null;
 }
 
-export default async function RefereeReportPage({ params }: { params: Promise<{ matchId: string }> }) {
-  const { matchId } = await params;
+export default async function RefereeReportPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: matchId } = await params;
   const match = await getMatchDetails(matchId);
   const supabase = await createServerSupabaseClient();
 

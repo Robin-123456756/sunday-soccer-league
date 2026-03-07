@@ -5,8 +5,8 @@ import { getCurrentUserProfile } from '@/server/queries/auth';
 import { getMatchDetails, getMatchLineupRows } from '@/server/queries/matches';
 import { getPlayersByTeam } from '@/server/queries/players';
 
-export default async function MatchLineupsPage({ params }: { params: Promise<{ matchId: string }> }) {
-  const { matchId } = await params;
+export default async function MatchLineupsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: matchId } = await params;
   const [profile, match] = await Promise.all([getCurrentUserProfile(), getMatchDetails(matchId)]);
 
   const teams = [match.home_team, match.away_team].filter(Boolean) as Array<{ id: string; name: string }>;
