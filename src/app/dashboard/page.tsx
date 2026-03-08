@@ -8,9 +8,16 @@ import {
   sectionTitleStyle,
 } from '@/components/ui/styles';
 import { getMatches } from '@/server/queries/matches';
-import { getDashboardStats, getRecentCardEvents } from '@/server/queries/dashboard';
+import { requireSignedInPage } from '@/server/queries/auth';
+import {
+  getDashboardStats,
+  getRecentCardEvents,
+  getRefereeDashboardData,
+  getTeamManagerDashboardData,
+} from '@/server/queries/dashboard';
 
 export default async function DashboardPage() {
+  const profile = await requireSignedInPage();
   const [stats, matches, recentCards] = await Promise.all([
     getDashboardStats(),
     getMatches(),
@@ -18,13 +25,15 @@ export default async function DashboardPage() {
   ]);
 
   const upcomingMatches = matches.slice(0, 5);
+  const teamManagerData = profile.team_id ? await getTeamManagerDashboardData(profile.team_id) : null;
+  const refereeData = profile.role === 'referee' ? await getRefereeDashboardData(profile) : null;
 
   return (
     <main style={pageStyle}>
       <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 20 }}>
         <div>
           <h1 style={{ marginBottom: 8 }}>Sunday Soccer League Dashboard</h1>
-          <p style={mutedTextStyle}>Review fixtures, reports, incidents, teams, and exports from one place.</p>
+          <p style={mutedTextStyle}>Welcome {profile.full_name ?? profile.email ?? 'league user'}. Your dashboard is tailored to your role: {profile.role}.</p>
         </div>
 
         <div style={gridStyle}>
@@ -34,18 +43,63 @@ export default async function DashboardPage() {
           <StatCard label="Referees" value={stats.totalReferees} helper={`${stats.pendingReports} matches need referee reports`} />
         </div>
 
-        <div style={gridStyle}>
-          <div style={{ ...cardStyle, minHeight: 320 }}>
-            <h2 style={sectionTitleStyle}>Quick actions</h2>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Link href="/matches/new" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Create match</Link>
-              <Link href="/matches" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Open matches</Link>
-              <Link href="/players" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>View players</Link>
-              <Link href="/reports/exports" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Generate export</Link>
-            </div>
-            <p style={{ ...mutedTextStyle, marginTop: 14 }}>Total recorded card events: {stats.totalCards}</p>
+        {profile.role === 'admin' ? (
+          <div style={gridStyle}>
+            <RoleCard
+              title="Admin controls"
+              description={`Total recorded card events: ${stats.totalCards}. Manage exports, users, and operational data.`}
+              links={[
+                { href: '/matches/new', label: 'Create match' },
+                { href: '/admin/users', label: 'Manage users' },
+                { href: '/admin/settings', label: 'Open settings' },
+                { href: '/reports/exports', label: 'Generate export' },
+              ]}
+            />
+            <RoleCard
+              title="League operations"
+              description="Use the admin area to edit records, archive data, and keep matchday operations consistent."
+              links={[
+                { href: '/teams', label: 'Manage teams' },
+                { href: '/players', label: 'Manage players' },
+                { href: '/referees', label: 'Manage referees' },
+                { href: '/matches', label: 'Open matches' },
+              ]}
+            />
           </div>
+        ) : null}
 
+        {profile.role === 'team_manager' ? (
+          <div style={gridStyle}>
+            <StatCard label="My lineups saved" value={teamManagerData?.lineupCount ?? 0} helper="Saved lineup rows for your team" />
+            <StatCard label="My uploads" value={teamManagerData?.uploadCount ?? 0} helper="Team sheet uploads linked to your team" />
+            <RoleCard
+              title="Team manager area"
+              description="Use the dedicated lineup area to edit only your own team's lineups and team sheet uploads."
+              links={[
+                { href: '/team-manager/lineups', label: 'Open my lineups' },
+                { href: '/matches', label: 'View matches' },
+              ]}
+            />
+          </div>
+        ) : null}
+
+        {profile.role === 'referee' ? (
+          <div style={gridStyle}>
+            <StatCard label="Assigned matches" value={refereeData?.assignedMatches.length ?? 0} helper="Matches assigned to you" />
+            <StatCard label="Reports submitted" value={refereeData?.reportsCount ?? 0} helper="Reports already filed" />
+            <StatCard label="Cards entered" value={refereeData?.cardCount ?? 0} helper="Card events across your matches" />
+            <RoleCard
+              title="Referee area"
+              description="Go straight to your assigned matches to submit cards and referee reports."
+              links={[
+                { href: '/referee/assigned-matches', label: 'Open assigned matches' },
+                { href: '/matches', label: 'Browse all matches' },
+              ]}
+            />
+          </div>
+        ) : null}
+
+        <div style={gridStyle}>
           <div style={{ ...cardStyle, minHeight: 320 }}>
             <h2 style={sectionTitleStyle}>Recent matches</h2>
             <div style={{ display: 'grid', gap: 12 }}>
@@ -62,24 +116,24 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
-        </div>
 
-        <div style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Recent card incidents</h2>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {recentCards.length === 0 ? (
-              <p style={mutedTextStyle}>No card incidents recorded yet.</p>
-            ) : (
-              recentCards.map((event) => (
-                <div key={event.id} style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 12 }}>
-                  <strong>{event.player?.full_name ?? 'Unknown player'}</strong>
-                  <p style={{ ...mutedTextStyle, marginTop: 6 }}>
-                    {event.match?.home_team?.name ?? 'Home'} vs {event.match?.away_team?.name ?? 'Away'} · {event.card_type} · {event.minute}'
-                  </p>
-                  <p style={{ ...mutedTextStyle, marginTop: 6 }}>{event.reason}</p>
-                </div>
-              ))
-            )}
+          <div style={{ ...cardStyle, minHeight: 320 }}>
+            <h2 style={sectionTitleStyle}>Recent card incidents</h2>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {recentCards.length === 0 ? (
+                <p style={mutedTextStyle}>No card incidents recorded yet.</p>
+              ) : (
+                recentCards.map((event) => (
+                  <div key={event.id} style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 12 }}>
+                    <strong>{event.player?.full_name ?? 'Unknown player'}</strong>
+                    <p style={{ ...mutedTextStyle, marginTop: 6 }}>
+                      {event.match?.home_team?.name ?? 'Home'} vs {event.match?.away_team?.name ?? 'Away'} · {event.card_type} · {event.minute}&apos;
+                    </p>
+                    <p style={{ ...mutedTextStyle, marginTop: 6 }}>{event.reason}</p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -93,6 +147,20 @@ function StatCard({ label, value, helper }: { label: string; value: number; help
       <p style={{ ...mutedTextStyle, marginBottom: 10 }}>{label}</p>
       <div style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>{value}</div>
       <p style={mutedTextStyle}>{helper}</p>
+    </div>
+  );
+}
+
+function RoleCard({ title, description, links }: { title: string; description: string; links: { href: string; label: string }[] }) {
+  return (
+    <div style={cardStyle}>
+      <h2 style={sectionTitleStyle}>{title}</h2>
+      <p style={{ ...mutedTextStyle, marginBottom: 14 }}>{description}</p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {links.map((link) => (
+          <Link key={link.href} href={link.href} style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>{link.label}</Link>
+        ))}
+      </div>
     </div>
   );
 }

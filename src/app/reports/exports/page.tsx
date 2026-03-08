@@ -1,25 +1,34 @@
-export default function ExportsPage() {
+import { cardStyle, pageStyle } from '@/components/ui/styles';
+import { requireRolePage } from '@/server/queries/auth';
+
+export default async function ExportsPage() {
+  await requireRolePage(['admin']);
+
   return (
-    <main style={{ padding: 24, fontFamily: "Arial, sans-serif" }}>
-      <h1>Exports</h1>
-      <p>Generate CSV or Excel files for player details and other league reports.</p>
+    <main style={{ ...pageStyle, padding: 24 }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gap: 20 }}>
+        <div>
+          <h1 style={{ marginBottom: 8 }}>Exports</h1>
+          <p style={{ margin: 0, color: '#4b5563' }}>Only admins can generate CSV or Excel files for player details and league reports.</p>
+        </div>
 
-      <section style={{ marginTop: 24, border: "1px solid #ddd", padding: 16, borderRadius: 8 }}>
-        <h2>Export Filters</h2>
-        <ul>
-          <li>Team</li>
-          <li>Player</li>
-          <li>Season</li>
-          <li>Matchday</li>
-          <li>Date range</li>
-          <li>Card type</li>
-        </ul>
-      </section>
+        <section style={{ ...cardStyle, display: 'grid', gap: 8 }}>
+          <h2 style={{ margin: 0 }}>Export filters</h2>
+          <ul style={{ margin: 0, color: '#4b5563' }}>
+            <li>Team</li>
+            <li>Player</li>
+            <li>Season</li>
+            <li>Matchday</li>
+            <li>Date range</li>
+            <li>Card type</li>
+          </ul>
+        </section>
 
-      <section style={{ marginTop: 24, border: "1px solid #ddd", padding: 16, borderRadius: 8 }}>
-        <h2>Formats</h2>
-        <p>CSV and Excel (.xlsx)</p>
-      </section>
+        <section style={{ ...cardStyle, display: 'grid', gap: 8 }}>
+          <h2 style={{ margin: 0 }}>Formats</h2>
+          <p style={{ margin: 0, color: '#4b5563' }}>CSV and Excel (.xlsx)</p>
+        </section>
+      </div>
     </main>
   );
 }

@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { TeamSheetUploadForm } from '@/components/forms/TeamSheetUploadForm';
 import { pageStyle } from '@/components/ui/styles';
+import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails } from '@/server/queries/matches';
 
 export default async function MatchUploadsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: matchId } = await params;
-  const match = await getMatchDetails(matchId);
+  await requireRolePage(['admin', 'team_manager']);
+  const { id } = await params;
+  const match = await getMatchDetails(id);
   const teams = [match.home_team, match.away_team].filter(Boolean) as Array<{ id: string; name: string }>;
 
   return (
@@ -16,7 +18,7 @@ export default async function MatchUploadsPage({ params }: { params: Promise<{ i
           <h1>Upload team sheets</h1>
           <p style={{ color: '#4b5563' }}>{match.home_team?.name} vs {match.away_team?.name}</p>
         </div>
-        <TeamSheetUploadForm matchId={matchId} teams={teams} />
+        <TeamSheetUploadForm matchId={id} teams={teams} />
       </div>
     </main>
   );

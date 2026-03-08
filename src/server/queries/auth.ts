@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { AppRole, UserProfile } from "@/types/database";
 
@@ -49,4 +50,24 @@ export function getDefaultRouteForRole(role: AppRole) {
   if (role === "team_manager") return "/team-manager/lineups";
   if (role === "referee") return "/referee/assigned-matches";
   return "/dashboard";
+}
+
+export async function requireSignedInPage() {
+  const profile = await getCurrentUserProfileOrNull();
+
+  if (!profile || !profile.is_active) {
+    redirect("/sign-in");
+  }
+
+  return profile;
+}
+
+export async function requireRolePage(allowedRoles: AppRole[]) {
+  const profile = await requireSignedInPage();
+
+  if (!allowedRoles.includes(profile.role)) {
+    redirect(getDefaultRouteForRole(profile.role));
+  }
+
+  return profile;
 }

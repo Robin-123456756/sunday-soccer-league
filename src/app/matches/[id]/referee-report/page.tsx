@@ -2,26 +2,19 @@ import Link from 'next/link';
 import { RefereeReportForm } from '@/components/forms/RefereeReportForm';
 import { pageStyle, cardStyle } from '@/components/ui/styles';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails } from '@/server/queries/matches';
 
-interface RefereeReportValues {
-  general_comment?: string | null;
-  time_management_observation?: string | null;
-  dress_code_observation?: string | null;
-  organization_observation?: string | null;
-  conduct_observation?: string | null;
-  incidents?: string | null;
-}
-
 export default async function RefereeReportPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: matchId } = await params;
-  const match = await getMatchDetails(matchId);
+  await requireRolePage(['admin', 'referee']);
+  const { id } = await params;
+  const match = await getMatchDetails(id);
   const supabase = await createServerSupabaseClient();
 
   const { data: report } = await supabase
     .from('referee_reports')
     .select('*')
-    .eq('match_id', matchId)
+    .eq('match_id', id)
     .eq('referee_id', match.referee?.id ?? '')
     .maybeSingle();
 
@@ -37,7 +30,7 @@ export default async function RefereeReportPage({ params }: { params: Promise<{ 
         {!match.referee?.id ? (
           <div style={cardStyle}>Assign a referee to this match before submitting a referee report.</div>
         ) : (
-          <RefereeReportForm matchId={matchId} refereeId={match.referee.id} initialValues={report as RefereeReportValues | null} />
+          <RefereeReportForm matchId={id} refereeId={match.referee.id} initialValues={report} />
         )}
       </div>
     </main>

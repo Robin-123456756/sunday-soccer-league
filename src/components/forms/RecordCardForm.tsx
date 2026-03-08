@@ -37,7 +37,7 @@ export function RecordCardForm({
               matchId,
               teamId: String(formData.get('teamId') ?? ''),
               playerId: String(formData.get('playerId') ?? ''),
-              cardType: String(formData.get('cardType') ?? 'yellow') as any,
+              cardType: String(formData.get('cardType') ?? 'yellow') as 'yellow' | 'red',
               minute: Number(formData.get('minute') ?? 0),
               reason: String(formData.get('reason') ?? ''),
               refereeNote: String(formData.get('refereeNote') ?? '') || null,

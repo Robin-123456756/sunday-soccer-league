@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { SaveLineupForm } from '@/components/forms/SaveLineupForm';
 import { pageStyle, cardStyle } from '@/components/ui/styles';
-import { getCurrentUserProfile } from '@/server/queries/auth';
+import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails, getMatchLineupRows } from '@/server/queries/matches';
 import { getPlayersByTeam } from '@/server/queries/players';
 
 export default async function MatchLineupsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: matchId } = await params;
-  const [profile, match] = await Promise.all([getCurrentUserProfile(), getMatchDetails(matchId)]);
+  const profile = await requireRolePage(['admin', 'team_manager']);
+  const { id } = await params;
+  const match = await getMatchDetails(id);
 
   const teams = [match.home_team, match.away_team].filter(Boolean) as Array<{ id: string; name: string }>;
   const visibleTeams = profile.role === 'team_manager' ? teams.filter((team) => team.id === profile.team_id) : teams;
@@ -16,7 +17,7 @@ export default async function MatchLineupsPage({ params }: { params: Promise<{ i
     visibleTeams.map(async (team) => {
       const [players, lineupRows] = await Promise.all([
         getPlayersByTeam(team.id),
-        getMatchLineupRows(matchId, team.id),
+        getMatchLineupRows(id, team.id),
       ]);
       return { team, players, lineupRows };
     })
@@ -38,7 +39,7 @@ export default async function MatchLineupsPage({ params }: { params: Promise<{ i
         {teamData.map(({ team, players, lineupRows }) => (
           <SaveLineupForm
             key={team.id}
-            matchId={matchId}
+            matchId={id}
             teamId={team.id}
             teamName={team.name}
             players={players}

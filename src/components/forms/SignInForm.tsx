@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { signInAction, type AuthFormState } from "@/server/actions/auth";
 import { buttonStyle, cardStyle, inputStyle, labelStyle, mutedTextStyle } from "@/components/ui/styles";
@@ -40,6 +41,10 @@ export function SignInForm() {
       <button type="submit" disabled={pending} style={{ ...buttonStyle, opacity: pending ? 0.7 : 1 }}>
         {pending ? "Signing in..." : "Sign in"}
       </button>
+
+      <p style={{ ...mutedTextStyle, fontSize: 14 }}>
+        Forgot your password? <Link href="/forgot-password">Reset it here</Link>
+      </p>
     </form>
   );
 }

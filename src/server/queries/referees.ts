@@ -9,10 +9,20 @@ export interface RefereeOption {
 export interface RefereeListItem {
   id: string;
   full_name: string;
+  phone: string | null;
   email: string | null;
   level: string | null;
   is_active: boolean;
   assignedMatches: number;
+}
+
+export interface RefereeRecord {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  level: string | null;
+  is_active: boolean;
 }
 
 export async function getReferees(): Promise<RefereeOption[]> {
@@ -27,18 +37,41 @@ export async function getReferees(): Promise<RefereeOption[]> {
   return (data ?? []) as RefereeOption[];
 }
 
+export async function getRefereeRecord(refereeId: string): Promise<RefereeRecord | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from('referees')
+    .select('id, full_name, phone, email, level, is_active')
+    .eq('id', refereeId)
+    .maybeSingle();
+
+  if (error) throw new Error('Could not load referee.');
+  return (data as RefereeRecord | null) ?? null;
+}
+
 export async function getRefereesList(): Promise<RefereeListItem[]> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('referees')
-    .select('id, full_name, email, level, is_active, matches(id)')
+    .select('id, full_name, phone, email, level, is_active, matches(id)')
     .order('full_name');
 
   if (error) throw new Error('Could not load referees list.');
 
-  return (data ?? []).map((referee: any) => ({
+  type RefereeWithMatches = {
+    id: string;
+    full_name: string;
+    phone: string | null;
+    email: string | null;
+    level: string | null;
+    is_active: boolean;
+    matches: { id: string }[] | null;
+  };
+
+  return ((data ?? []) as unknown as RefereeWithMatches[]).map((referee) => ({
     id: referee.id,
     full_name: referee.full_name,
+    phone: referee.phone ?? null,
     email: referee.email ?? null,
     level: referee.level ?? null,
     is_active: Boolean(referee.is_active),

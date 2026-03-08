@@ -32,6 +32,7 @@ export interface MatchRecord {
   status: MatchStatus;
   home_score: number | null;
   away_score: number | null;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 }

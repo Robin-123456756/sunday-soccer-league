@@ -39,7 +39,7 @@ export function CreateMatchForm({ teams, referees }: { teams: Option[]; referees
               homeJerseyColor: String(formData.get('homeJerseyColor') ?? '') || null,
               awayJerseyColor: String(formData.get('awayJerseyColor') ?? '') || null,
               refereeId: String(formData.get('refereeId') ?? '') || null,
-              status: String(formData.get('status') ?? 'scheduled') as any,
+              status: String(formData.get('status') ?? 'scheduled') as 'scheduled' | 'in_progress' | 'completed' | 'postponed',
             });
             setMessage(`Match created successfully. Match ID: ${result.id}`);
             (event.target as HTMLFormElement).reset();

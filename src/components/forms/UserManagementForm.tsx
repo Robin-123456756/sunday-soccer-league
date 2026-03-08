@@ -4,7 +4,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { useState, useTransition } from 'react';
 import { createManagedUser, updateManagedUser } from '@/server/actions/users';
 import type { AppRole } from '@/types/database';
-import { buttonStyle, cardStyle, gridStyle, inputStyle, labelStyle, secondaryButtonStyle, sectionTitleStyle } from '@/components/ui/styles';
+import { buttonStyle, cardStyle, gridStyle, inputStyle, labelStyle, sectionTitleStyle } from '@/components/ui/styles';
 
 interface TeamOption {
   id: string;

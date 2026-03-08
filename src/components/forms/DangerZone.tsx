@@ -12,7 +12,7 @@ export function DangerZone({
   title: string;
   description: string;
   actionLabel: string;
-  action: () => Promise<any>;
+  action: () => Promise<unknown>;
 }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);

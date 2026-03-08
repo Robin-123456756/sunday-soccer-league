@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { cardStyle, pageStyle, secondaryButtonStyle } from '@/components/ui/styles';
 import { getMatches } from '@/server/queries/matches';
+import { requireSignedInPage } from '@/server/queries/auth';
 
 export default async function MatchesPage() {
+  const profile = await requireSignedInPage();
   const matches = await getMatches();
 
   return (
@@ -13,9 +15,11 @@ export default async function MatchesPage() {
             <h1 style={{ marginBottom: 8 }}>Matches</h1>
             <p style={{ color: '#4b5563', margin: 0 }}>Create fixtures and jump into lineups, cards, reports, uploads, and overview pages.</p>
           </div>
-          <Link href="/matches/new" style={{ ...secondaryButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-            + Create match
-          </Link>
+          {profile.role === 'admin' ? (
+            <Link href="/matches/new" style={{ ...secondaryButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+              + Create match
+            </Link>
+          ) : null}
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
@@ -33,10 +37,11 @@ export default async function MatchesPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <NavButton href={`/matches/${match.id}`} label="Overview" />
-                  <NavButton href={`/matches/${match.id}/lineups`} label="Lineups" />
-                  <NavButton href={`/matches/${match.id}/cards`} label="Cards" />
-                  <NavButton href={`/matches/${match.id}/referee-report`} label="Referee report" />
-                  <NavButton href={`/matches/${match.id}/uploads`} label="Uploads" />
+                  {profile.role === 'admin' ? <NavButton href={`/matches/${match.id}/edit`} label="Edit match" /> : null}
+                  {(profile.role === 'admin' || profile.role === 'team_manager') ? <NavButton href={`/matches/${match.id}/lineups`} label="Lineups" /> : null}
+                  {(profile.role === 'admin' || profile.role === 'referee') ? <NavButton href={`/matches/${match.id}/cards`} label="Cards" /> : null}
+                  {(profile.role === 'admin' || profile.role === 'referee') ? <NavButton href={`/matches/${match.id}/referee-report`} label="Referee report" /> : null}
+                  {(profile.role === 'admin' || profile.role === 'team_manager') ? <NavButton href={`/matches/${match.id}/uploads`} label="Uploads" /> : null}
                 </div>
               </div>
             ))

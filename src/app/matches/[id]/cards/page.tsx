@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { RecordCardForm } from '@/components/forms/RecordCardForm';
 import { pageStyle } from '@/components/ui/styles';
+import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails } from '@/server/queries/matches';
 import { getPlayersByTeam } from '@/server/queries/players';
 
 export default async function MatchCardsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: matchId } = await params;
-  const match = await getMatchDetails(matchId);
+  await requireRolePage(['admin', 'referee']);
+  const { id } = await params;
+  const match = await getMatchDetails(id);
   const teams = [match.home_team, match.away_team].filter(Boolean) as Array<{ id: string; name: string }>;
   const playerEntries = await Promise.all(teams.map(async (team) => [team.id, await getPlayersByTeam(team.id)] as const));
   const playersByTeam = Object.fromEntries(playerEntries);
@@ -19,7 +21,7 @@ export default async function MatchCardsPage({ params }: { params: Promise<{ id:
           <h1>Record cards</h1>
           <p style={{ color: '#4b5563' }}>{match.home_team?.name} vs {match.away_team?.name}</p>
         </div>
-        <RecordCardForm matchId={matchId} teams={teams} playersByTeam={playersByTeam} />
+        <RecordCardForm matchId={id} teams={teams} playersByTeam={playersByTeam} />
       </div>
     </main>
   );

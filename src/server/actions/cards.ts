@@ -30,7 +30,7 @@ export async function recordCardEvent(input: CardEventInput) {
   if (
     profile.role === "referee" &&
     match.referees &&
-    (match.referees as any).email?.toLowerCase?.() !== (profile.email ?? "").toLowerCase()
+    (match.referees as { email?: string | null }).email?.toLowerCase?.() !== (profile.email ?? "").toLowerCase()
   ) {
     throw new Error("Referees can only record cards for matches assigned to them.");
   }

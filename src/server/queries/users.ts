@@ -19,7 +19,17 @@ export async function getUsersProfiles(): Promise<UserProfileListItem[]> {
 
   if (error) throw new Error('Could not load user profiles.');
 
-  return (data ?? []).map((profile: any) => ({
+  type ProfileWithTeam = {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    role: 'admin' | 'referee' | 'team_manager';
+    team_id: string | null;
+    is_active: boolean;
+    teams: { name: string } | null;
+  };
+
+  return ((data ?? []) as unknown as ProfileWithTeam[]).map((profile) => ({
     id: profile.id,
     full_name: profile.full_name ?? null,
     email: profile.email ?? null,

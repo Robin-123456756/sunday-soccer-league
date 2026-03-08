@@ -100,6 +100,7 @@ export async function updateMatch(input: UpdateMatchInput) {
 
   revalidatePath("/matches");
   revalidatePath(`/matches/${input.matchId}`);
+  revalidatePath(`/matches/${input.matchId}/edit`);
   revalidatePath("/dashboard");
   return data;
 }

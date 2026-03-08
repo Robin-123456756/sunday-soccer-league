@@ -1,47 +1,35 @@
-export const dynamic = "force-dynamic";
-import { notFound, redirect } from "next/navigation";
-import { getPlayerById, updatePlayer } from "@/server/actions/players";
-import { getTeams } from "@/server/actions/teams";
-import { PageHeader } from "@/components/ui/page-header";
-import { FormErrorAlert } from "@/components/ui/form-error-alert";
-import { withErrorQuery } from "@/lib/url";
-import { PlayerForm } from "../../_components/player-form";
+import { notFound } from 'next/navigation';
+import { pageStyle } from '@/components/ui/styles';
+import { PlayerForm } from '@/components/forms/PlayerForm';
+import { DangerZone } from '@/components/forms/DangerZone';
+import { archivePlayer, deletePlayer, restorePlayer } from '@/server/actions/archive';
+import { requireRolePage } from '@/server/queries/auth';
+import { getPlayerRecord } from '@/server/queries/players';
+import { getTeams } from '@/server/queries/teams';
 
-interface EditPlayerPageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
-}
-
-export default async function EditPlayerPage({
-  params,
-  searchParams,
-}: EditPlayerPageProps) {
+export default async function EditPlayerPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireRolePage(['admin']);
   const { id } = await params;
-  const { error } = await searchParams;
-  const [player, teams] = await Promise.all([getPlayerById(id), getTeams()]);
-
-  if (!player) {
-    notFound();
-  }
-
-  async function handleUpdatePlayer(formData: FormData) {
-    "use server";
-    const result = await updatePlayer(id, formData);
-    if (result?.error) {
-      redirect(withErrorQuery(`/players/${id}/edit`, result.error));
-    }
-    redirect(`/players/${id}`);
-  }
+  const [player, teams] = await Promise.all([getPlayerRecord(id), getTeams()]);
+  if (!player) notFound();
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={`Edit ${player.fullName}`} />
-      <FormErrorAlert message={error} />
-      <PlayerForm
-        action={handleUpdatePlayer}
-        teams={teams}
-        defaultValues={player}
-      />
-    </div>
+    <main style={pageStyle}>
+      <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gap: 20 }}>
+        <PlayerForm mode="edit" teams={teams} initialValues={player} />
+        <DangerZone
+          title={player.is_active ? 'Archive player' : 'Restore player'}
+          description={player.is_active ? 'Archive this player to keep history without showing them as active.' : 'Restore this player to active squad selection.'}
+          actionLabel={player.is_active ? 'Archive player' : 'Restore player'}
+          action={() => (player.is_active ? archivePlayer(id) : restorePlayer(id))}
+        />
+        <DangerZone
+          title="Delete player"
+          description="Permanently delete this player. Use this only if the record was created by mistake."
+          actionLabel="Delete player"
+          action={() => deletePlayer(id)}
+        />
+      </div>
+    </main>
   );
 }

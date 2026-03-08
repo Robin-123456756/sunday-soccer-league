@@ -1,42 +1,34 @@
-export const dynamic = "force-dynamic";
-import { notFound, redirect } from "next/navigation";
-import { getTeamById, updateTeam } from "@/server/actions/teams";
-import { PageHeader } from "@/components/ui/page-header";
-import { FormErrorAlert } from "@/components/ui/form-error-alert";
-import { withErrorQuery } from "@/lib/url";
-import { TeamForm } from "../../_components/team-form";
+import { notFound } from 'next/navigation';
+import { pageStyle } from '@/components/ui/styles';
+import { TeamForm } from '@/components/forms/TeamForm';
+import { DangerZone } from '@/components/forms/DangerZone';
+import { archiveTeam, deleteTeam, restoreTeam } from '@/server/actions/archive';
+import { requireRolePage } from '@/server/queries/auth';
+import { getTeamRecord } from '@/server/queries/teams';
 
-interface EditTeamPageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
-}
-
-export default async function EditTeamPage({
-  params,
-  searchParams,
-}: EditTeamPageProps) {
+export default async function EditTeamPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireRolePage(['admin']);
   const { id } = await params;
-  const { error } = await searchParams;
-  const team = await getTeamById(id);
-
-  if (!team) {
-    notFound();
-  }
-
-  async function handleUpdateTeam(formData: FormData) {
-    "use server";
-    const result = await updateTeam(id, formData);
-    if (result?.error) {
-      redirect(withErrorQuery(`/teams/${id}/edit`, result.error));
-    }
-    redirect(`/teams/${id}`);
-  }
+  const team = await getTeamRecord(id);
+  if (!team) notFound();
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={`Edit ${team.name}`} />
-      <FormErrorAlert message={error} />
-      <TeamForm action={handleUpdateTeam} defaultValues={team} />
-    </div>
+    <main style={pageStyle}>
+      <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gap: 20 }}>
+        <TeamForm mode="edit" initialValues={team} />
+        <DangerZone
+          title={team.is_archived ? 'Restore team' : 'Archive team'}
+          description={team.is_archived ? 'Restore this team to active league workflows.' : 'Archive this team without deleting its historical records.'}
+          actionLabel={team.is_archived ? 'Restore team' : 'Archive team'}
+          action={() => (team.is_archived ? restoreTeam(id) : archiveTeam(id))}
+        />
+        <DangerZone
+          title="Delete team"
+          description="Permanently delete this team. This can fail if players or matches still reference the team."
+          actionLabel="Delete team"
+          action={() => deleteTeam(id)}
+        />
+      </div>
+    </main>
   );
 }

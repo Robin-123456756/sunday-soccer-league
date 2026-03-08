@@ -38,9 +38,17 @@ export interface MatchUploadRow {
   team: { id: string; name: string | null } | null;
 }
 
-export async function getMatchById(matchId: string): Promise<MatchRecord> {
+export interface MatchQueryOptions {
+  includeArchived?: boolean;
+}
+
+export async function getMatchById(matchId: string, options: MatchQueryOptions = {}): Promise<MatchRecord> {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.from('matches').select('*').eq('id', matchId).single();
+  let query = supabase.from('matches').select('*').eq('id', matchId);
+  if (!options.includeArchived) {
+    query = query.eq('is_archived', false);
+  }
+  const { data, error } = await query.single();
 
   if (error || !data) {
     throw new Error('Match not found.');
@@ -49,9 +57,9 @@ export async function getMatchById(matchId: string): Promise<MatchRecord> {
   return data as MatchRecord;
 }
 
-export async function getMatches(): Promise<MatchListItem[]> {
+export async function getMatches(options: MatchQueryOptions = {}): Promise<MatchListItem[]> {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('matches')
     .select(`
       id,
@@ -59,30 +67,26 @@ export async function getMatches(): Promise<MatchListItem[]> {
       kickoff_time,
       venue,
       status,
+      is_archived,
       home_team:teams!matches_home_team_id_fkey(id, name),
       away_team:teams!matches_away_team_id_fkey(id, name),
       referee:referees!matches_referee_id_fkey(id, full_name)
     `)
     .order('match_date', { ascending: false });
 
-  if (error) throw new Error('Could not load matches.');
-  return (data ?? []) as any;
-}
-
-export async function getAssignedRefereeMatchIds() {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.from('matches').select('id').order('match_date', { ascending: false });
-
-  if (error) {
-    throw new Error('Could not load referee matches.');
+  if (!options.includeArchived) {
+    query = query.eq('is_archived', false);
   }
 
-  return (data ?? []).map((row: { id: string }) => row.id);
+  const { data, error } = await query;
+
+  if (error) throw new Error('Could not load matches.');
+  return (data ?? []) as unknown as MatchListItem[];
 }
 
-export async function getMatchDetails(matchId: string) {
+export async function getMatchDetails(matchId: string, options: MatchQueryOptions = {}) {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('matches')
     .select(`
       id,
@@ -90,6 +94,7 @@ export async function getMatchDetails(matchId: string) {
       kickoff_time,
       venue,
       status,
+      is_archived,
       home_score,
       away_score,
       home_jersey_color,
@@ -98,11 +103,22 @@ export async function getMatchDetails(matchId: string) {
       away_team:teams!matches_away_team_id_fkey(id, name),
       referee:referees!matches_referee_id_fkey(id, full_name, email)
     `)
-    .eq('id', matchId)
-    .single();
+    .eq('id', matchId);
+
+  if (!options.includeArchived) {
+    query = query.eq('is_archived', false);
+  }
+
+  const { data, error } = await query.single();
 
   if (error || !data) throw new Error('Match not found.');
-  return data as any;
+  return data as unknown as MatchListItem & {
+    home_score: number | null;
+    away_score: number | null;
+    home_jersey_color: string | null;
+    away_jersey_color: string | null;
+    referee: { id: string; full_name: string; email: string | null } | null;
+  };
 }
 
 export async function getMatchLineupRows(matchId: string, teamId: string): Promise<MatchLineupRow[]> {
@@ -134,7 +150,7 @@ export async function getMatchCardEvents(matchId: string): Promise<MatchCardEven
     .order('minute', { ascending: true });
 
   if (error) throw new Error('Could not load match cards.');
-  return (data ?? []) as any;
+  return (data ?? []) as unknown as MatchCardEventRow[];
 }
 
 export async function getMatchUploads(matchId: string): Promise<MatchUploadRow[]> {
@@ -153,7 +169,7 @@ export async function getMatchUploads(matchId: string): Promise<MatchUploadRow[]
     .order('uploaded_at', { ascending: false });
 
   if (error) throw new Error('Could not load match uploads.');
-  return (data ?? []) as any;
+  return (data ?? []) as unknown as MatchUploadRow[];
 }
 
 export async function getMatchReport(matchId: string, refereeId?: string | null) {
@@ -162,10 +178,13 @@ export async function getMatchReport(matchId: string, refereeId?: string | null)
   if (refereeId) query = query.eq('referee_id', refereeId);
   const { data, error } = await query.maybeSingle();
   if (error) throw new Error('Could not load referee report.');
-  return data as any;
+  return data;
 }
 
-export async function getMatchesAssignedToCurrentReferee(email?: string | null): Promise<MatchListItem[]> {
+export async function getMatchesAssignedToCurrentReferee(
+  email?: string | null,
+  options: MatchQueryOptions = {}
+): Promise<MatchListItem[]> {
   const supabase = await createServerSupabaseClient();
   if (!email) return [];
 
@@ -177,7 +196,7 @@ export async function getMatchesAssignedToCurrentReferee(email?: string | null):
 
   if (!referee?.id) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('matches')
     .select(`
       id,
@@ -185,6 +204,7 @@ export async function getMatchesAssignedToCurrentReferee(email?: string | null):
       kickoff_time,
       venue,
       status,
+      is_archived,
       home_team:teams!matches_home_team_id_fkey(id, name),
       away_team:teams!matches_away_team_id_fkey(id, name),
       referee:referees!matches_referee_id_fkey(id, full_name)
@@ -192,6 +212,12 @@ export async function getMatchesAssignedToCurrentReferee(email?: string | null):
     .eq('referee_id', referee.id)
     .order('match_date', { ascending: false });
 
+  if (!options.includeArchived) {
+    query = query.eq('is_archived', false);
+  }
+
+  const { data, error } = await query;
+
   if (error) throw new Error('Could not load assigned matches.');
-  return (data ?? []) as any;
+  return (data ?? []) as unknown as MatchListItem[];
 }
