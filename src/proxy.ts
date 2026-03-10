@@ -14,17 +14,15 @@ function getRedirectUrl(request: NextRequest, pathname: string) {
   return url;
 }
 
-function getUnauthorizedRedirect(request: NextRequest, role: AppRole) {
-  return getRedirectUrl(request, getDefaultRouteForRole(role));
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  // Skip for static assets, API routes, etc.
   if (isExcludedFromAuth(pathname)) {
     return NextResponse.next();
   }
 
+  // Refresh the Supabase session on every request
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -48,17 +46,15 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Not signed in
+  // No session — allow public paths, redirect everything else to sign-in
   if (!user) {
     if (isPublicPath(pathname)) {
       return response;
     }
-
     const signInUrl = getRedirectUrl(request, "/sign-in");
     const next = `${pathname}${search || ""}`;
     signInUrl.searchParams.set("next", next);
@@ -66,7 +62,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Signed in - check role + active status
+  // Signed in — allow auth callback routes through without profile check
+  if (
+    pathname.startsWith("/auth/confirm") ||
+    pathname.startsWith("/auth/error") ||
+    pathname.startsWith("/auth/post-login") ||
+    pathname.startsWith("/auth/update-password") ||
+    pathname.startsWith("/auth/accept-invite")
+  ) {
+    return response;
+  }
+
+  // Fetch role and active status
   const { data: profile } = await supabase
     .from("users_profile")
     .select("role, is_active")
@@ -76,25 +83,31 @@ export async function proxy(request: NextRequest) {
   const role = profile?.role as AppRole | undefined;
   const isActive = Boolean(profile?.is_active);
 
+  // Inactive or missing profile — send back to sign-in
   if (!role || !isActive) {
     const inactiveUrl = getRedirectUrl(request, "/sign-in");
     inactiveUrl.searchParams.set("flash", "inactive_profile");
     return NextResponse.redirect(inactiveUrl);
   }
 
-  // Signed-in users on public auth pages get redirected to their default route
+  // Signed-in user hitting landing page or sign-in — redirect to their dashboard
   if (pathname === "/" || pathname === "/sign-in") {
-    return NextResponse.redirect(getRedirectUrl(request, getDefaultRouteForRole(role)));
+    return NextResponse.redirect(
+      getRedirectUrl(request, getDefaultRouteForRole(role))
+    );
   }
 
-  // Allow auth utility pages even when signed in
-  if (pathname === "/forgot-password" || pathname.startsWith("/auth/update-password") || pathname.startsWith("/auth/accept-invite") || pathname.startsWith("/auth/confirm") || pathname.startsWith("/auth/error")) {
+  // Allow forgot-password even when signed in
+  if (pathname === "/forgot-password") {
     return response;
   }
 
-  // Role-based route authorization
+  // Enforce role-based route access
   if (!routeAllowsRole(pathname, role)) {
-    const unauthorizedUrl = getUnauthorizedRedirect(request, role);
+    const unauthorizedUrl = getRedirectUrl(
+      request,
+      getDefaultRouteForRole(role)
+    );
     unauthorizedUrl.searchParams.set("flash", "unauthorized");
     return NextResponse.redirect(unauthorizedUrl);
   }
@@ -103,5 +116,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
