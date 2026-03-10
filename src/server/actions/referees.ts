@@ -11,11 +11,24 @@ export interface UpsertRefereeInput {
   email?: string | null;
   level?: string | null;
   isActive?: boolean;
+  userId?: string | null;
 }
 
 export async function createReferee(input: UpsertRefereeInput) {
   await requireRole(["admin"]);
   const supabase = await createServerSupabaseClient();
+
+  // Resolve user_id: use explicit value, or look up by email
+  let userId = input.userId ?? null;
+  if (!userId && input.email) {
+    const { data: profile } = await supabase
+      .from("users_profile")
+      .select("id")
+      .eq("email", input.email.toLowerCase())
+      .eq("role", "referee")
+      .maybeSingle();
+    if (profile) userId = profile.id;
+  }
 
   const { data, error } = await supabase
     .from("referees")
@@ -25,6 +38,7 @@ export async function createReferee(input: UpsertRefereeInput) {
       email: input.email ?? null,
       level: input.level ?? null,
       is_active: input.isActive ?? true,
+      user_id: userId,
     })
     .select("id")
     .single();
@@ -41,6 +55,18 @@ export async function updateReferee(input: UpsertRefereeInput) {
   if (!input.id) throw new Error("Referee ID is required.");
   const supabase = await createServerSupabaseClient();
 
+  // Resolve user_id: use explicit value, or look up by email
+  let userId = input.userId ?? null;
+  if (!userId && input.email) {
+    const { data: profile } = await supabase
+      .from("users_profile")
+      .select("id")
+      .eq("email", input.email.toLowerCase())
+      .eq("role", "referee")
+      .maybeSingle();
+    if (profile) userId = profile.id;
+  }
+
   const { data, error } = await supabase
     .from("referees")
     .update({
@@ -49,6 +75,7 @@ export async function updateReferee(input: UpsertRefereeInput) {
       email: input.email ?? null,
       level: input.level ?? null,
       is_active: input.isActive ?? true,
+      user_id: userId,
     })
     .eq("id", input.id)
     .select("id")

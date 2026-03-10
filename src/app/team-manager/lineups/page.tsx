@@ -32,7 +32,7 @@ export default async function TeamManagerLineupsPage() {
             <div key={match.id} style={{ ...cardStyle, display: 'grid', gap: 12 }}>
               <div>
                 <h2 style={sectionTitleStyle}>{match.home_team?.name ?? 'Home'} vs {match.away_team?.name ?? 'Away'}</h2>
-                <p style={mutedTextStyle}>{match.match_date} · {match.kickoff_time ?? 'Time TBD'} · {match.venue ?? 'Venue TBD'}</p>
+                <p style={mutedTextStyle}>{match.match_date} {"\u00b7"}{match.kickoff_time ?? 'Time TBD'} {"\u00b7"}{match.venue ?? 'Venue TBD'}</p>
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <Link href={`/matches/${match.id}`} style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>Open match</Link>

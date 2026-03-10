@@ -29,15 +29,15 @@ export default async function DashboardPage() {
   const refereeData = profile.role === 'referee' ? await getRefereeDashboardData(profile) : null;
 
   return (
-    <main style={pageStyle}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 20 }}>
+    <main className="page-main" style={pageStyle}>
+      <div className="page-container" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 20 }}>
         <div>
           <h1 style={{ marginBottom: 8 }}>Sunday Soccer League Dashboard</h1>
           <p style={mutedTextStyle}>Welcome {profile.full_name ?? profile.email ?? 'league user'}. Your dashboard is tailored to your role: {profile.role}.</p>
         </div>
 
         <div style={gridStyle}>
-          <StatCard label="Matches" value={stats.totalMatches} helper={`${stats.scheduledMatches} scheduled · ${stats.completedMatches} completed`} />
+          <StatCard label="Matches" value={stats.totalMatches} helper={`${stats.scheduledMatches} scheduled {"\u00b7"}${stats.completedMatches} completed`} />
           <StatCard label="Teams" value={stats.totalTeams} helper="Registered clubs in the league" />
           <StatCard label="Players" value={stats.totalPlayers} helper="Available across all squads" />
           <StatCard label="Referees" value={stats.totalReferees} helper={`${stats.pendingReports} matches need referee reports`} />
@@ -109,8 +109,8 @@ export default async function DashboardPage() {
                 upcomingMatches.map((match) => (
                   <div key={match.id} style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 12 }}>
                     <strong>{match.home_team?.name ?? 'Home'} vs {match.away_team?.name ?? 'Away'}</strong>
-                    <p style={{ ...mutedTextStyle, marginTop: 6 }}>{match.match_date} · {match.kickoff_time ?? 'Time TBD'} · {match.status}</p>
-                    <Link href={`/matches/${match.id}`} style={{ color: '#111827' }}>Open match →</Link>
+                    <p style={{ ...mutedTextStyle, marginTop: 6 }}>{match.match_date} {"\u00b7"}{match.kickoff_time ?? 'Time TBD'} {"\u00b7"}{match.status}</p>
+                    <Link href={`/matches/${match.id}`} style={{ color: '#111827' }}>Open match {"\u2192"}</Link>
                   </div>
                 ))
               )}
@@ -127,7 +127,7 @@ export default async function DashboardPage() {
                   <div key={event.id} style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 12 }}>
                     <strong>{event.player?.full_name ?? 'Unknown player'}</strong>
                     <p style={{ ...mutedTextStyle, marginTop: 6 }}>
-                      {event.match?.home_team?.name ?? 'Home'} vs {event.match?.away_team?.name ?? 'Away'} · {event.card_type} · {event.minute}&apos;
+                      {event.match?.home_team?.name ?? 'Home'} vs {event.match?.away_team?.name ?? 'Away'} {"\u00b7"}{event.card_type} {"\u00b7"}{event.minute}&apos;
                     </p>
                     <p style={{ ...mutedTextStyle, marginTop: 6 }}>{event.reason}</p>
                   </div>

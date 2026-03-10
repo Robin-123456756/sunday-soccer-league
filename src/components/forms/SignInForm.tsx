@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { signInAction, type AuthFormState } from "@/server/actions/auth";
 import { buttonStyle, cardStyle, inputStyle, labelStyle, mutedTextStyle } from "@/components/ui/styles";
 
@@ -9,6 +10,8 @@ const initialState: AuthFormState = {};
 
 export function SignInForm() {
   const [state, formAction, pending] = useActionState(signInAction, initialState);
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "";
 
   return (
     <form action={formAction} style={{ ...cardStyle, maxWidth: 460, margin: "0 auto", display: "grid", gap: 16 }}>
@@ -16,6 +19,8 @@ export function SignInForm() {
         <h1 style={{ margin: "0 0 8px" }}>Sign in</h1>
         <p style={mutedTextStyle}>Use your Supabase email and password to access the league system.</p>
       </div>
+
+      <input type="hidden" name="next" value={next} />
 
       <label>
         <span style={labelStyle}>Email</span>

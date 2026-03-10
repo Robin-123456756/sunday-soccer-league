@@ -8,8 +8,8 @@ export default async function TeamsPage() {
   const teams = await getTeamsWithCounts();
 
   return (
-    <main style={pageStyle}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gap: 20 }}>
+    <main className="page-main" style={pageStyle}>
+      <div className="page-container" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gap: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ marginBottom: 8 }}>Teams</h1>
@@ -24,7 +24,7 @@ export default async function TeamsPage() {
           {teams.length === 0 ? (
             <p style={mutedTextStyle}>No teams found yet.</p>
           ) : (
-            <table style={tableStyle}>
+            <div className="table-wrapper"><table style={tableStyle}>
               <thead>
                 <tr>
                   <th style={thStyle}>Team</th>
@@ -49,7 +49,7 @@ export default async function TeamsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </div>

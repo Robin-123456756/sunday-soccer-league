@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { SaveLineupForm } from '@/components/forms/SaveLineupForm';
 import { pageStyle, cardStyle } from '@/components/ui/styles';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails, getMatchLineupRows } from '@/server/queries/matches';
 import { getPlayersByTeam } from '@/server/queries/players';
@@ -27,7 +27,7 @@ export default async function MatchLineupsPage({ params }: { params: Promise<{ i
     <main style={pageStyle}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gap: 20 }}>
         <div>
-          <Link href="/matches">← Back to matches</Link>
+          <Breadcrumbs items={[{ label: 'Matches', href: '/matches' }, { label: `${match.home_team?.name} vs ${match.away_team?.name}`, href: `/matches/${id}` }, { label: 'Lineups' }]} />
           <h1>Match lineups</h1>
           <p style={{ color: '#4b5563' }}>{match.home_team?.name} vs {match.away_team?.name}</p>
         </div>

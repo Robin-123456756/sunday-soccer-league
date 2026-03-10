@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { RefereeReportForm } from '@/components/forms/RefereeReportForm';
 import { pageStyle, cardStyle } from '@/components/ui/styles';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails } from '@/server/queries/matches';
@@ -22,7 +22,7 @@ export default async function RefereeReportPage({ params }: { params: Promise<{ 
     <main style={pageStyle}>
       <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 20 }}>
         <div>
-          <Link href="/matches">← Back to matches</Link>
+          <Breadcrumbs items={[{ label: 'Matches', href: '/matches' }, { label: `${match.home_team?.name} vs ${match.away_team?.name}`, href: `/matches/${id}` }, { label: 'Referee report' }]} />
           <h1>Referee report</h1>
           <p style={{ color: '#4b5563' }}>{match.home_team?.name} vs {match.away_team?.name}</p>
         </div>

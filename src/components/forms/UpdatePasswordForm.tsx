@@ -37,7 +37,7 @@ export function UpdatePasswordForm() {
           if (updateError) throw updateError;
           await syncCurrentUserProfileAction();
           setMessage("Password updated successfully. Redirecting...");
-          router.push("/auth/post-login");
+          router.push("/auth/post-login?flash=password_updated");
           router.refresh();
         } catch (err) {
           setError(err instanceof Error ? err.message : "Could not update password.");

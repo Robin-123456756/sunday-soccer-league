@@ -52,7 +52,7 @@ export function AcceptInviteForm() {
           });
           if (updateError) throw updateError;
           await syncCurrentUserProfileAction(fullName.trim());
-          router.push("/auth/post-login");
+          router.push("/auth/post-login?flash=invite_completed");
           router.refresh();
         } catch (err) {
           setError(err instanceof Error ? err.message : "Could not finish onboarding.");

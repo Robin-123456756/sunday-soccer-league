@@ -118,12 +118,32 @@ export async function getPlayerRecord(playerId: string): Promise<PlayerRecord | 
   return (data as PlayerRecord | null) ?? null;
 }
 
-export async function getPlayersList(): Promise<PlayerListItem[]> {
+export interface PlayerFilterOptions {
+  teamId?: string;
+  search?: string;
+  isActive?: boolean;
+}
+
+export async function getPlayersList(filters: PlayerFilterOptions = {}): Promise<PlayerListItem[]> {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('players')
     .select('id, full_name, jersey_number, position, registration_number, is_active, team_id, teams(name)')
     .order('full_name');
+
+  if (filters.teamId) {
+    query = query.eq('team_id', filters.teamId);
+  }
+
+  if (filters.search) {
+    query = query.ilike('full_name', `%${filters.search}%`);
+  }
+
+  if (filters.isActive !== undefined) {
+    query = query.eq('is_active', filters.isActive);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw new Error('Could not load players list.');
 

@@ -78,6 +78,7 @@ create table public.referees (
   email text unique,
   level text,
   is_active boolean not null default true,
+  user_id uuid unique references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -476,6 +477,8 @@ as $$
   select lower(coalesce(email, '')) from public.users_profile where id = auth.uid();
 $$;
 
+create index if not exists idx_referees_user_id on public.referees(user_id);
+
 create or replace function public.current_referee_id()
 returns uuid
 language sql
@@ -483,7 +486,8 @@ stable
 as $$
   select id
   from public.referees
-  where lower(coalesce(email, '')) = public.current_user_email()
+  where user_id = auth.uid()
+     or (user_id is null and lower(coalesce(email, '')) = public.current_user_email())
   limit 1;
 $$;
 

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { requireRole } from "@/server/queries/auth";
+import { requireRole, requireMatchRole } from "@/server/queries/auth";
+import { validateScore } from "@/lib/validation";
 
 export interface CreateMatchInput {
   matchdayId?: string | null;
@@ -65,6 +66,48 @@ export interface UpdateMatchInput {
   status?: "scheduled" | "in_progress" | "completed" | "postponed";
   homeScore?: number | null;
   awayScore?: number | null;
+}
+
+export interface UpdateScoreInput {
+  matchId: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  status?: "in_progress" | "completed";
+}
+
+export async function updateMatchScore(input: UpdateScoreInput) {
+  await requireMatchRole(input.matchId, ["admin", "referee"]);
+
+  const homeScoreError = validateScore(input.homeScore, "Home score");
+  if (homeScoreError) throw new Error(homeScoreError);
+
+  const awayScoreError = validateScore(input.awayScore, "Away score");
+  if (awayScoreError) throw new Error(awayScoreError);
+
+  const supabase = await createServerSupabaseClient();
+
+  const updates: Record<string, unknown> = {
+    home_score: input.homeScore,
+    away_score: input.awayScore,
+  };
+
+  if (input.status) {
+    updates.status = input.status;
+  }
+
+  const { error } = await supabase
+    .from("matches")
+    .update(updates)
+    .eq("id", input.matchId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/matches");
+  revalidatePath(`/matches/${input.matchId}`);
+  revalidatePath("/dashboard");
+  return { success: true };
 }
 
 export async function updateMatch(input: UpdateMatchInput) {

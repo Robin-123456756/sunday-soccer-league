@@ -2,39 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getCurrentUserProfile } from "@/server/queries/auth";
+import { requireMatchRole, validateTeamInMatch, validatePlayerInTeam } from "@/server/queries/auth";
+import { validateCardType, validateActionMinute } from "@/lib/validation";
 import type { CardEventInput } from "@/types/database";
 
 export async function recordCardEvent(input: CardEventInput) {
-  const profile = await getCurrentUserProfile();
+  await requireMatchRole(input.matchId, ["admin", "referee"]);
 
-  if (!["admin", "referee"].includes(profile.role)) {
-    throw new Error("Only admins or referees can record cards.");
-  }
+  const cardTypeError = validateCardType(input.cardType);
+  if (cardTypeError) throw new Error(cardTypeError);
+
+  const minuteError = validateActionMinute(input.minute);
+  if (minuteError) throw new Error(minuteError);
+
+  // Validate team belongs to match
+  await validateTeamInMatch(input.matchId, input.teamId);
+
+  // Validate player belongs to team
+  await validatePlayerInTeam(input.playerId, input.teamId);
 
   const supabase = await createServerSupabaseClient();
-  const { data: match, error: matchError } = await supabase
-    .from("matches")
-    .select(`
-      id,
-      referee_id,
-      referees:referee_id ( id, email )
-    `)
-    .eq("id", input.matchId)
-    .single();
-
-  if (matchError || !match) {
-    throw new Error("Match not found.");
-  }
-
-  if (
-    profile.role === "referee" &&
-    match.referees &&
-    (match.referees as { email?: string | null }).email?.toLowerCase?.() !== (profile.email ?? "").toLowerCase()
-  ) {
-    throw new Error("Referees can only record cards for matches assigned to them.");
-  }
-
   const { error } = await supabase.from("card_events").insert({
     match_id: input.matchId,
     team_id: input.teamId,

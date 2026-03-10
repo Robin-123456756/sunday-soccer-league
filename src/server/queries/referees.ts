@@ -49,12 +49,27 @@ export async function getRefereeRecord(refereeId: string): Promise<RefereeRecord
   return (data as RefereeRecord | null) ?? null;
 }
 
-export async function getRefereesList(): Promise<RefereeListItem[]> {
+export interface RefereeFilterOptions {
+  search?: string;
+  isActive?: boolean;
+}
+
+export async function getRefereesList(filters: RefereeFilterOptions = {}): Promise<RefereeListItem[]> {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('referees')
     .select('id, full_name, phone, email, level, is_active, matches(id)')
     .order('full_name');
+
+  if (filters.search) {
+    query = query.ilike('full_name', `%${filters.search}%`);
+  }
+
+  if (filters.isActive !== undefined) {
+    query = query.eq('is_active', filters.isActive);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw new Error('Could not load referees list.');
 

@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { TeamSheetUploadForm } from '@/components/forms/TeamSheetUploadForm';
 import { pageStyle } from '@/components/ui/styles';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { requireRolePage } from '@/server/queries/auth';
 import { getMatchDetails } from '@/server/queries/matches';
 
@@ -14,7 +14,7 @@ export default async function MatchUploadsPage({ params }: { params: Promise<{ i
     <main style={pageStyle}>
       <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 20 }}>
         <div>
-          <Link href="/matches">← Back to matches</Link>
+          <Breadcrumbs items={[{ label: 'Matches', href: '/matches' }, { label: `${match.home_team?.name} vs ${match.away_team?.name}`, href: `/matches/${id}` }, { label: 'Uploads' }]} />
           <h1>Upload team sheets</h1>
           <p style={{ color: '#4b5563' }}>{match.home_team?.name} vs {match.away_team?.name}</p>
         </div>

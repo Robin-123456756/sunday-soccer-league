@@ -1,0 +1,7 @@
+You have been invited to the Sunday Soccer League system.
+
+Open this link to finish setting up your account and choose your password:
+{{ .ConfirmationURL }}
+
+This invitation was sent to {{ .Email }}.
+If you were not expecting it, you can ignore this email.

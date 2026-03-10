@@ -64,7 +64,7 @@ export function SaveLineupForm({
 
       <div style={{ display: 'grid', gap: 12 }}>
         {players.map((player) => {
-          const descriptor = [player.position, player.jersey_number ? `#${player.jersey_number}` : null].filter(Boolean).join(' · ');
+          const descriptor = [player.position, player.jersey_number ? `#${player.jersey_number}` : null].filter(Boolean).join(" \u00b7 ");
           return (
             <div key={player.id} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 12 }}>
               <div style={{ fontWeight: 600 }}>{player.full_name}</div>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { pageStyle } from "@/components/ui/styles";
 import { SignInForm } from "@/components/forms/SignInForm";
@@ -12,7 +13,9 @@ export default async function SignInPage() {
 
   return (
     <main style={{ ...pageStyle, display: "grid", alignItems: "center" }}>
-      <SignInForm />
+      <Suspense>
+        <SignInForm />
+      </Suspense>
     </main>
   );
 }

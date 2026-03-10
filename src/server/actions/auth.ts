@@ -32,6 +32,7 @@ export async function signInAction(
 ): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "").trim();
 
   if (!email || !password) {
     return { error: "Email and password are required." };
@@ -44,23 +45,33 @@ export async function signInAction(
     return { error: error.message };
   }
 
+  // If there's a safe redirect target, go there; otherwise resolve via post-login
+  if (next && next.startsWith("/") && !next.startsWith("//")) {
+    redirect(next);
+  }
+
   redirect("/auth/post-login");
 }
 
 export async function signOutAction() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
-  redirect("/sign-in");
+  redirect("/sign-in?flash=signed_out");
 }
 
-export async function resolvePostLoginRedirect() {
+export async function resolvePostLoginRedirect(flash?: string | null) {
   const profile = await getCurrentUserProfileOrNull();
 
-  if (!profile || !profile.is_active) {
-    return "/sign-in";
+  if (!profile) {
+    return "/sign-in?flash=auth_required";
   }
 
-  return getDefaultRouteForRole(profile.role);
+  if (!profile.is_active) {
+    return "/sign-in?flash=inactive_profile";
+  }
+
+  const destination = getDefaultRouteForRole(profile.role);
+  return flash ? `${destination}?flash=${encodeURIComponent(flash)}` : destination;
 }
 
 export async function requestPasswordResetAction(

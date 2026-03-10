@@ -54,3 +54,39 @@ export function validateMinute(minute: number): string | null {
   }
   return null;
 }
+
+/* ── Server-action-level validators ── */
+
+const VALID_CARD_TYPES = ["yellow", "red", "second_yellow_red"] as const;
+export type ValidCardType = (typeof VALID_CARD_TYPES)[number];
+
+export function validateCardType(cardType: string): string | null {
+  if (!(VALID_CARD_TYPES as readonly string[]).includes(cardType)) {
+    return "Invalid card type.";
+  }
+  return null;
+}
+
+export function validateActionMinute(minute: number): string | null {
+  if (!Number.isInteger(minute) || minute < 0 || minute > 130) {
+    return "Minute must be a whole number between 0 and 130.";
+  }
+  return null;
+}
+
+export function validateScore(value: number | null, label: string): string | null {
+  if (value !== null && (!Number.isInteger(value) || value < 0)) {
+    return `${label} must be a non-negative whole number.`;
+  }
+  return null;
+}
+
+export function validateDifferentPlayers(
+  playerOffId: string,
+  playerOnId: string
+): string | null {
+  if (playerOffId === playerOnId) {
+    return "Player coming off and player coming on must be different.";
+  }
+  return null;
+}

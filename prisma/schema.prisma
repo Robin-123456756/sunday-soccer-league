@@ -87,6 +87,7 @@ model Referee {
   email       String?
   level       String?
   isActive    Boolean         @default(true)
+  userId      String?         @unique
   matches     Match[]
   reports     RefereeReport[]
   createdAt   DateTime        @default(now())

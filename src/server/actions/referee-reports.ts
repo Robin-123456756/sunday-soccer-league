@@ -2,29 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getCurrentUserProfile } from "@/server/queries/auth";
+import { requireMatchRole } from "@/server/queries/auth";
 import type { RefereeReportInput } from "@/types/database";
 
 export async function submitRefereeReport(input: RefereeReportInput) {
-  const profile = await getCurrentUserProfile();
+  await requireMatchRole(input.matchId, ["admin", "referee"]);
 
-  if (!["admin", "referee"].includes(profile.role)) {
-    throw new Error("Only admins or referees can submit reports.");
-  }
-
+  // Verify the refereeId matches the match's assigned referee
   const supabase = await createServerSupabaseClient();
-  const { data: referee, error: refereeError } = await supabase
-    .from("referees")
-    .select("id, email")
-    .eq("id", input.refereeId)
+  const { data: match, error: matchError } = await supabase
+    .from("matches")
+    .select("referee_id")
+    .eq("id", input.matchId)
     .single();
 
-  if (refereeError || !referee) {
-    throw new Error("Referee not found.");
+  if (matchError || !match) {
+    throw new Error("Match not found.");
   }
 
-  if (profile.role === "referee" && referee.email?.toLowerCase() !== (profile.email ?? "").toLowerCase()) {
-    throw new Error("Referees can only submit their own reports.");
+  if (match.referee_id !== input.refereeId) {
+    throw new Error("Referee report must use the referee assigned to this match.");
   }
 
   const { error } = await supabase.from("referee_reports").upsert({
