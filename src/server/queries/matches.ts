@@ -42,6 +42,14 @@ export interface MatchQueryOptions {
   includeArchived?: boolean;
 }
 
+export interface MatchFilterOptions extends MatchQueryOptions {
+  teamId?: string;
+  refereeId?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 export async function getMatchById(matchId: string, options: MatchQueryOptions = {}): Promise<MatchRecord> {
   const supabase = await createServerSupabaseClient();
   let query = supabase.from('matches').select('*').eq('id', matchId);
@@ -57,7 +65,7 @@ export async function getMatchById(matchId: string, options: MatchQueryOptions =
   return data as MatchRecord;
 }
 
-export async function getMatches(options: MatchQueryOptions = {}): Promise<MatchListItem[]> {
+export async function getMatches(options: MatchFilterOptions = {}): Promise<MatchListItem[]> {
   const supabase = await createServerSupabaseClient();
   let query = supabase
     .from('matches')
@@ -76,6 +84,26 @@ export async function getMatches(options: MatchQueryOptions = {}): Promise<Match
 
   if (!options.includeArchived) {
     query = query.eq('is_archived', false);
+  }
+
+  if (options.teamId) {
+    query = query.or(`home_team_id.eq.${options.teamId},away_team_id.eq.${options.teamId}`);
+  }
+
+  if (options.refereeId) {
+    query = query.eq('referee_id', options.refereeId);
+  }
+
+  if (options.status) {
+    query = query.eq('status', options.status);
+  }
+
+  if (options.dateFrom) {
+    query = query.gte('match_date', options.dateFrom);
+  }
+
+  if (options.dateTo) {
+    query = query.lte('match_date', options.dateTo);
   }
 
   const { data, error } = await query;
@@ -151,6 +179,34 @@ export async function getMatchCardEvents(matchId: string): Promise<MatchCardEven
 
   if (error) throw new Error('Could not load match cards.');
   return (data ?? []) as unknown as MatchCardEventRow[];
+}
+
+export interface MatchSubstitutionRow {
+  id: string;
+  minute: number;
+  reason: string | null;
+  player_off: { id: string; full_name: string | null } | null;
+  player_on: { id: string; full_name: string | null } | null;
+  team: { id: string; name: string | null } | null;
+}
+
+export async function getMatchSubstitutions(matchId: string): Promise<MatchSubstitutionRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from('substitutions')
+    .select(`
+      id,
+      minute,
+      reason,
+      player_off:players!substitutions_player_off_id_fkey(id, full_name),
+      player_on:players!substitutions_player_on_id_fkey(id, full_name),
+      team:teams(id, name)
+    `)
+    .eq('match_id', matchId)
+    .order('minute', { ascending: true });
+
+  if (error) throw new Error('Could not load match substitutions.');
+  return (data ?? []) as unknown as MatchSubstitutionRow[];
 }
 
 export async function getMatchUploads(matchId: string): Promise<MatchUploadRow[]> {
